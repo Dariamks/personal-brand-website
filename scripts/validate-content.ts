@@ -15,6 +15,7 @@ import * as yaml from "js-yaml";
 import { z } from "zod";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { mdxFromMarkdown } from "mdast-util-mdx";
+import { mdx } from "micromark-extension-mdx";
 
 // ── Config ───────────────────────────────────────────────────────────
 
@@ -183,8 +184,8 @@ interface MdastNode {
 
 function parseMdast(md: string): MdastNode {
   return fromMarkdown(md, {
-    extensions: [mdxFromMarkdown()],
-    mdastExtensions: [],
+    extensions: [mdx()],
+    mdastExtensions: [mdxFromMarkdown()],
   }) as unknown as MdastNode;
 }
 
