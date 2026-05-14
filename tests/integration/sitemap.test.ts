@@ -23,7 +23,9 @@ describe("Sitemap", () => {
   });
 
   it("sitemap contains all public pages except 404", () => {
-    const htmlFiles = getAllHtmlFiles(distDir).filter((f) => !f.includes("404"));
+    const htmlFiles = getAllHtmlFiles(distDir).filter(
+      (f) => !f.includes("404"),
+    );
     // Sitemap should include all non-404 pages
     const sitemapPath = resolve(distDir, "sitemap-index.xml");
     if (existsSync(sitemapPath)) {

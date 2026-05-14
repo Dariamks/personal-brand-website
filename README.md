@@ -64,7 +64,7 @@ pnpm test
 
 在 `src/content/blog/` 下创建 `.mdx` 文件：
 
-```mdx
+````mdx
 ---
 title: "文章标题"
 date: "2025-01-15"
@@ -72,7 +72,7 @@ category: "技术"
 tags: ["TypeScript", "Web"]
 summary: "文章摘要，不超过 500 字符。"
 draft: false
-cover: "./images/cover.jpg"  # 可选
+cover: "./images/cover.jpg" # 可选
 ---
 
 ## 二级标题
@@ -82,9 +82,11 @@ cover: "./images/cover.jpg"  # 可选
 ```ts
 const greeting = "Hello, World!";
 ```
+````
 
 $$ E = mc^2 $$
-```
+
+````
 
 ### 项目
 
@@ -117,7 +119,7 @@ draft: false
 ## 项目成果或影响指标
 
 ...
-```
+````
 
 > 注意：四个 H2 标题的顺序和文本必须完全一致，构建时校验会检查。
 
@@ -151,48 +153,48 @@ draft: false
 
 ### Blog
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| title | string (1-200) | 是 | 文章标题 |
-| date | YYYY-MM-DD | 是 | 发布日期 |
-| updated | YYYY-MM-DD | 否 | 最后更新日期 |
-| category | string (1-50) | 是 | 分类 |
-| tags | string[] (≤20) | 否 | 标签列表 |
-| summary | string (1-500) | 是 | 摘要 |
-| draft | boolean | 否 | 草稿（不发布） |
-| cover | image | 否 | 封面图 |
+| 字段     | 类型           | 必填 | 说明           |
+| -------- | -------------- | ---- | -------------- |
+| title    | string (1-200) | 是   | 文章标题       |
+| date     | YYYY-MM-DD     | 是   | 发布日期       |
+| updated  | YYYY-MM-DD     | 否   | 最后更新日期   |
+| category | string (1-50)  | 是   | 分类           |
+| tags     | string[] (≤20) | 否   | 标签列表       |
+| summary  | string (1-500) | 是   | 摘要           |
+| draft    | boolean        | 否   | 草稿（不发布） |
+| cover    | image          | 否   | 封面图         |
 
 ### Project
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| title | string (1-60) | 是 | 项目名称 |
-| date | YYYY-MM-DD | 是 | 日期 |
-| summary | string (1-120) | 是 | 一句话简介 |
-| stack | string[] (≤6) | 是 | 卡片展示的技术栈 |
-| fullStack | string[] (≥1) | 是 | 详情页完整技术栈 |
-| demo | url | 否 | Live Demo 链接 |
-| repo | url | 否 | 源码仓库链接 |
-| draft | boolean | 否 | 草稿 |
+| 字段      | 类型           | 必填 | 说明             |
+| --------- | -------------- | ---- | ---------------- |
+| title     | string (1-60)  | 是   | 项目名称         |
+| date      | YYYY-MM-DD     | 是   | 日期             |
+| summary   | string (1-120) | 是   | 一句话简介       |
+| stack     | string[] (≤6)  | 是   | 卡片展示的技术栈 |
+| fullStack | string[] (≥1)  | 是   | 详情页完整技术栈 |
+| demo      | url            | 否   | Live Demo 链接   |
+| repo      | url            | 否   | 源码仓库链接     |
+| draft     | boolean        | 否   | 草稿             |
 
 ### Journal
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| date | YYYY-MM-DD | 是 | 日期 |
-| tags | string[] (≤20) | 否 | 标签 |
-| draft | boolean | 否 | 草稿 |
+| 字段  | 类型           | 必填 | 说明 |
+| ----- | -------------- | ---- | ---- |
+| date  | YYYY-MM-DD     | 是   | 日期 |
+| tags  | string[] (≤20) | 否   | 标签 |
+| draft | boolean        | 否   | 草稿 |
 
 ### Skills
 
 ```yaml
 groups:
-  - category: 编程语言  # 编程语言 | 框架/库 | 工具 | 基础设施/云服务 | 其他
+  - category: 编程语言 # 编程语言 | 框架/库 | 工具 | 基础设施/云服务 | 其他
     items:
       - name: TypeScript
         proficiency:
-          kind: years    # years | level | percent
-          value: 6       # years: 0-50 | level: 熟练/掌握/了解 | percent: 0-100
+          kind: years # years | level | percent
+          value: 6 # years: 0-50 | level: 熟练/掌握/了解 | percent: 0-100
 ```
 
 ## 部署
@@ -210,8 +212,8 @@ groups:
 
 ### 环境变量
 
-| 变量 | 说明 |
-|------|------|
+| 变量              | 说明                                |
+| ----------------- | ----------------------------------- |
 | `PUBLIC_SITE_URL` | 站点完整 URL（用于 sitemap/RSS/OG） |
 
 ## 测试

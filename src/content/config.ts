@@ -123,10 +123,7 @@ const resume = defineCollection({
         company: z.string().min(1),
         role: z.string().min(1),
         start: z.string().regex(/^\d{4}-\d{2}$/),
-        end: z.union([
-          z.string().regex(/^\d{4}-\d{2}$/),
-          z.literal("至今"),
-        ]),
+        end: z.union([z.string().regex(/^\d{4}-\d{2}$/), z.literal("至今")]),
         description: z.string().min(50).max(500),
       }),
     ),
@@ -136,10 +133,7 @@ const resume = defineCollection({
         major: z.string().min(1),
         degree: z.string().min(1),
         start: z.string().regex(/^\d{4}-\d{2}$/),
-        end: z.union([
-          z.string().regex(/^\d{4}-\d{2}$/),
-          z.literal("至今"),
-        ]),
+        end: z.union([z.string().regex(/^\d{4}-\d{2}$/), z.literal("至今")]),
       }),
     ),
   }),

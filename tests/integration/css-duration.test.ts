@@ -23,7 +23,8 @@ describe("CSS animation durations", () => {
     const cssFiles = walkCss(distDir);
     for (const file of cssFiles) {
       const css = readFileSync(file, "utf-8");
-      const durationRegex = /(?:transition|animation)-duration:\s*([\d.]+)(m?s)/g;
+      const durationRegex =
+        /(?:transition|animation)-duration:\s*([\d.]+)(m?s)/g;
       let match;
       while ((match = durationRegex.exec(css)) !== null) {
         let ms = parseFloat(match[1]);

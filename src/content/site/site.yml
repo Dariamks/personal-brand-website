@@ -10,7 +10,4 @@ heroTags:
 nowLinkText: 看看我现在在做什么
 url: https://example.com
 email: xluk277167@gmail.com
-social:
-  github: https://github.com/example
-  linkedin: https://linkedin.com/in/example
-  twitter: https://twitter.com/example
+social: {}

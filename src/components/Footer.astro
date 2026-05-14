@@ -169,7 +169,7 @@ const currentYear = new Date().getFullYear();
     const toast = document.getElementById("email-toast");
     if (!emailLink || !toast) return;
 
-    let toastTimer: ReturnType<typeof setTimeout> | null = null;
+    let toastTimer = null;
 
     function showToast() {
       if (toastTimer) clearTimeout(toastTimer);

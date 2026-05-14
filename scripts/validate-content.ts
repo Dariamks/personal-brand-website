@@ -25,7 +25,13 @@ const CONTENT = path.join(ROOT, "src", "content");
 const errors: string[] = [];
 const warnings: string[] = [];
 
-const C = { RESET: "\x1b[0m", RED: "\x1b[31m", GREEN: "\x1b[32m", YELLOW: "\x1b[33m", CYAN: "\x1b[36m" };
+const C = {
+  RESET: "\x1b[0m",
+  RED: "\x1b[31m",
+  GREEN: "\x1b[32m",
+  YELLOW: "\x1b[33m",
+  CYAN: "\x1b[36m",
+};
 
 function err(file: string, msg: string) {
   errors.push(`${file}: ${msg}`);
@@ -45,7 +51,10 @@ function todayStr(): string {
 const blogSchema = z.object({
   title: z.string().min(1).max(200),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  updated: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  updated: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   category: z.string().min(1).max(50),
   tags: z.array(z.string().max(50)).max(20).default([]),
   summary: z.string().min(1).max(500),
@@ -80,45 +89,76 @@ const aboutSchema = z.object({
 });
 
 const skillsSchema = z.object({
-  groups: z.array(z.object({
-    category: z.enum(["编程语言", "框架/库", "工具", "基础设施/云服务", "其他"]),
-    items: z.array(z.object({
-      name: z.string().min(1).max(40),
-      proficiency: z.discriminatedUnion("kind", [
-        z.object({ kind: z.literal("years"), value: z.number().int().min(0).max(50) }),
-        z.object({ kind: z.literal("level"), value: z.enum(["熟练", "掌握", "了解"]) }),
-        z.object({ kind: z.literal("percent"), value: z.number().int().min(0).max(100) }),
+  groups: z.array(
+    z.object({
+      category: z.enum([
+        "编程语言",
+        "框架/库",
+        "工具",
+        "基础设施/云服务",
+        "其他",
       ]),
-    })).min(1),
-  })),
+      items: z
+        .array(
+          z.object({
+            name: z.string().min(1).max(40),
+            proficiency: z.discriminatedUnion("kind", [
+              z.object({
+                kind: z.literal("years"),
+                value: z.number().int().min(0).max(50),
+              }),
+              z.object({
+                kind: z.literal("level"),
+                value: z.enum(["熟练", "掌握", "了解"]),
+              }),
+              z.object({
+                kind: z.literal("percent"),
+                value: z.number().int().min(0).max(100),
+              }),
+            ]),
+          }),
+        )
+        .min(1),
+    }),
+  ),
 });
 
 const usesSchema = z.object({
-  groups: z.array(z.object({
-    category: z.string().min(1),
-    items: z.array(z.object({
-      name: z.string().min(1).max(100),
-      note: z.string().min(1).max(200),
-      url: z.string().url().optional(),
-    })).default([]),
-  })),
+  groups: z.array(
+    z.object({
+      category: z.string().min(1),
+      items: z
+        .array(
+          z.object({
+            name: z.string().min(1).max(100),
+            note: z.string().min(1).max(200),
+            url: z.string().url().optional(),
+          }),
+        )
+        .default([]),
+    }),
+  ),
 });
 
 const resumeSchema = z.object({
-  work: z.array(z.object({
-    company: z.string().min(1),
-    role: z.string().min(1),
-    start: z.string().regex(/^\d{4}-\d{2}$/),
-    end: z.union([z.string().regex(/^\d{4}-\d{2}$/), z.literal("至今")]),
-    description: z.string().min(50).max(500),
-  })),
-  education: z.array(z.object({
-    school: z.string().min(1),
-    major: z.string().min(1),
-    degree: z.string().min(1),
-    start: z.string().regex(/^\d{4}-\d{2}$/),
-    end: z.union([z.string().regex(/^\d{4}-\d{2}$/), z.literal("至今")]),
-  })),
+  work: z.array(
+    z.object({
+      company: z.string().min(1),
+      role: z.string().min(1),
+      start: z.string().regex(/^\d{4}-\d{2}$/),
+      end: z.union([z.string().regex(/^\d{4}-\d{2}$/), z.literal("至今")]),
+      description: z.string().min(50).max(500),
+    }),
+  ),
+  education: z.array(
+    z.object({
+      school: z.string().min(1),
+      major: z.string().min(1),
+      degree: z.string().min(1),
+      start: z.string().regex(/^\d{4}-\d{2}$/),
+      end: z.union([z.string().regex(/^\d{4}-\d{2}$/), z.literal("至今")]),
+    }),
+  ),
 });
 
 const siteSchema = z.object({
@@ -192,15 +232,25 @@ function parseMdast(md: string): MdastNode {
 function getH2Headings(tree: MdastNode): string[] {
   return (tree.children ?? [])
     .filter((n) => n.type === "heading" && n.depth === 2)
-    .map((n) => (n.children ?? []).map((c) => (typeof c.value === "string" ? c.value : "")).join(""));
+    .map((n) =>
+      (n.children ?? [])
+        .map((c) => (typeof c.value === "string" ? c.value : ""))
+        .join(""),
+    );
 }
 
-function countListItemsUnderHeading(tree: MdastNode, headingText: string): number {
+function countListItemsUnderHeading(
+  tree: MdastNode,
+  headingText: string,
+): number {
   let counting = false;
   let count = 0;
   for (const node of tree.children ?? []) {
     if (node.type === "heading" && node.depth === 2) {
-      counting = (node.children ?? []).map((c) => (typeof c.value === "string" ? c.value : "")).join("") === headingText;
+      counting =
+        (node.children ?? [])
+          .map((c) => (typeof c.value === "string" ? c.value : ""))
+          .join("") === headingText;
       continue;
     }
     if (counting && node.type === "list") count += (node.children ?? []).length;
@@ -224,7 +274,10 @@ function countChineseChars(text: string): number {
 
 function countWords(text: string): number {
   const cn = countChineseChars(text);
-  const en = text.replace(/[一-鿿㐀-䶿]/g, " ").split(/\s+/).filter(Boolean).length;
+  const en = text
+    .replace(/[一-鿿㐀-䶿]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
   return cn + en;
 }
 
@@ -232,9 +285,16 @@ function collectImageRefs(tree: MdastNode): string[] {
   const refs: string[] = [];
   (function walk(n: MdastNode) {
     if (n.type === "image" && typeof n.url === "string") refs.push(n.url);
-    if (n.type === "mdxJsxFlowElement" && (n.name === "img" || n.name === "Image")) {
+    if (
+      n.type === "mdxJsxFlowElement" &&
+      (n.name === "img" || n.name === "Image")
+    ) {
       for (const attr of n.attributes ?? []) {
-        if (attr.type === "mdxJsxAttribute" && attr.name === "src" && typeof attr.value === "string") {
+        if (
+          attr.type === "mdxJsxAttribute" &&
+          attr.name === "src" &&
+          typeof attr.value === "string"
+        ) {
           refs.push(attr.value);
         }
       }
@@ -249,7 +309,10 @@ function collectImageRefs(tree: MdastNode): string[] {
 function validateBlog() {
   const dir = path.join(CONTENT, "blog");
   const files = findFiles(dir, [".mdx", ".md"]);
-  if (files.length === 0) { warn("src/content/blog", "no files"); return; }
+  if (files.length === 0) {
+    warn("src/content/blog", "no files");
+    return;
+  }
 
   const slugs = new Map<string, string>();
 
@@ -265,7 +328,10 @@ function validateBlog() {
     // Slug uniqueness
     const base = path.basename(file, path.extname(file));
     const m = base.match(/^(\d{4}-\d{2}-\d{2})-(.+)$/);
-    if (!m) { err(rel, "filename must match YYYY-MM-DD-slug pattern"); continue; }
+    if (!m) {
+      err(rel, "filename must match YYYY-MM-DD-slug pattern");
+      continue;
+    }
     const [, , slug] = m;
     const existing = slugs.get(slug);
     if (existing) err(rel, `duplicate slug "${slug}" (also in ${existing})`);
@@ -281,7 +347,10 @@ function validateBlog() {
 function validateProjects() {
   const dir = path.join(CONTENT, "projects");
   const files = findFiles(dir, [".mdx", ".md"]);
-  if (files.length === 0) { warn("src/content/projects", "no files"); return; }
+  if (files.length === 0) {
+    warn("src/content/projects", "no files");
+    return;
+  }
 
   const requiredH2 = [
     "项目背景与要解决的问题",
@@ -304,7 +373,10 @@ function validateProjects() {
     const h2s = getH2Headings(tree);
     for (let i = 0; i < requiredH2.length; i++) {
       if (h2s[i] !== requiredH2[i]) {
-        err(rel, `H2 #${i + 1} expected "${requiredH2[i]}", got "${h2s[i] ?? "missing"}"`);
+        err(
+          rel,
+          `H2 #${i + 1} expected "${requiredH2[i]}", got "${h2s[i] ?? "missing"}"`,
+        );
       }
     }
   }
@@ -313,7 +385,10 @@ function validateProjects() {
 function validateJournal() {
   const dir = path.join(CONTENT, "journal");
   const files = findFiles(dir, [".mdx", ".md"]);
-  if (files.length === 0) { warn("src/content/journal", "no files"); return; }
+  if (files.length === 0) {
+    warn("src/content/journal", "no files");
+    return;
+  }
 
   const dates = new Set<string>();
   for (const file of files) {
@@ -340,7 +415,10 @@ function validateJournal() {
   // Journals should have at least 3 entries
   const published = dates.size;
   if (published > 0 && published < 3) {
-    warn("src/content/journal", `only ${published} journal entries (recommend ≥3)`);
+    warn(
+      "src/content/journal",
+      `only ${published} journal entries (recommend ≥3)`,
+    );
   }
 }
 
@@ -348,26 +426,35 @@ function validateNow() {
   const file = path.join(CONTENT, "now", "now.md");
   const alt = path.join(CONTENT, "now", "now.mdx");
   const actual = fs.existsSync(file) ? file : fs.existsSync(alt) ? alt : null;
-  if (!actual) { err("src/content/now", "now.md not found"); return; }
+  if (!actual) {
+    err("src/content/now", "now.md not found");
+    return;
+  }
 
   const rel = path.relative(ROOT, actual);
   const raw = fs.readFileSync(actual, "utf-8");
   const { data, content } = matter(raw);
 
   // Normalize Date objects from gray-matter
-  const lastUpdated = data.lastUpdated instanceof Date
-    ? data.lastUpdated.toISOString().slice(0, 10)
-    : data.lastUpdated;
+  const lastUpdated =
+    data.lastUpdated instanceof Date
+      ? data.lastUpdated.toISOString().slice(0, 10)
+      : data.lastUpdated;
   const normalizedData = { ...data, lastUpdated };
 
   validateSchema(rel, normalizedData, nowSchema);
 
-  if (typeof lastUpdated === "string" && /^\d{4}-\d{2}-\d{2}$/.test(lastUpdated)) {
+  if (
+    typeof lastUpdated === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(lastUpdated)
+  ) {
     if (lastUpdated > todayStr()) {
       err(rel, `lastUpdated (${lastUpdated}) is in the future`);
     }
     // Warn if stale (>90 days)
-    const daysAgo = Math.floor((Date.now() - new Date(lastUpdated).getTime()) / 86400000);
+    const daysAgo = Math.floor(
+      (Date.now() - new Date(lastUpdated).getTime()) / 86400000,
+    );
     if (daysAgo > 90) warn(rel, `lastUpdated is ${daysAgo} days ago (stale)`);
   }
 
@@ -376,7 +463,10 @@ function validateNow() {
   const required = ["现在在做", "现在在学", "现在在关注"];
   for (let i = 0; i < required.length; i++) {
     if (h2s[i] !== required[i]) {
-      err(rel, `H2 #${i + 1} expected "${required[i]}", got "${h2s[i] ?? "missing"}"`);
+      err(
+        rel,
+        `H2 #${i + 1} expected "${required[i]}", got "${h2s[i] ?? "missing"}"`,
+      );
     }
   }
 }
@@ -385,7 +475,10 @@ function validateAbout() {
   const file = path.join(CONTENT, "about", "about.mdx");
   const alt = path.join(CONTENT, "about", "about.md");
   const actual = fs.existsSync(file) ? file : fs.existsSync(alt) ? alt : null;
-  if (!actual) { err("src/content/about", "about.mdx not found"); return; }
+  if (!actual) {
+    err("src/content/about", "about.mdx not found");
+    return;
+  }
 
   const rel = path.relative(ROOT, actual);
   const raw = fs.readFileSync(actual, "utf-8");
@@ -395,7 +488,13 @@ function validateAbout() {
 
   const tree = parseMdast(content);
   const h2s = getH2Headings(tree);
-  for (const h of ["职业背景", "职业故事", "价值观", "技术兴趣", "非技术兴趣"]) {
+  for (const h of [
+    "职业背景",
+    "职业故事",
+    "价值观",
+    "技术兴趣",
+    "非技术兴趣",
+  ]) {
     if (!h2s.includes(h)) err(rel, `missing H2: "${h}"`);
   }
 
@@ -415,13 +514,19 @@ function validateAbout() {
 function validateDataFile(dirName: string, schema: z.ZodTypeAny) {
   const dir = path.join(CONTENT, dirName);
   const files = findFiles(dir, [".yml", ".yaml"]);
-  if (files.length === 0) { err(`src/content/${dirName}`, "no data file"); return; }
+  if (files.length === 0) {
+    err(`src/content/${dirName}`, "no data file");
+    return;
+  }
 
   for (const file of files) {
     const rel = path.relative(ROOT, file);
     try {
       const data = parseYamlFile(file);
-      if (data === null || data === undefined) { err(rel, "empty or invalid YAML"); continue; }
+      if (data === null || data === undefined) {
+        err(rel, "empty or invalid YAML");
+        continue;
+      }
       validateSchema(rel, data, schema);
     } catch (e) {
       err(rel, `parse error: ${e instanceof Error ? e.message : String(e)}`);
@@ -453,7 +558,10 @@ function runCrossChecks() {
   const projectDir = path.join(CONTENT, "projects");
 
   // Count published (non-draft) entries per collection
-  for (const [label, dir] of [["blog", blogDir], ["projects", projectDir]] as const) {
+  for (const [label, dir] of [
+    ["blog", blogDir],
+    ["projects", projectDir],
+  ] as const) {
     const files = findFiles(dir, [".mdx", ".md"]);
     let published = 0;
     for (const f of files) {
@@ -490,7 +598,9 @@ function main() {
   if (errors.length) {
     console.error(`\n${C.RED}Errors (${errors.length}):${C.RESET}`);
     for (const e of errors) console.error(`  ❌ ${e}`);
-    console.error(`\n${C.RED}Validation FAILED — ${errors.length} error(s), ${warnings.length} warning(s).${C.RESET}\n`);
+    console.error(
+      `\n${C.RED}Validation FAILED — ${errors.length} error(s), ${warnings.length} warning(s).${C.RESET}\n`,
+    );
     process.exit(1);
   }
 

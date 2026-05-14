@@ -12,8 +12,8 @@
     "format": "prettier --write .",
     "validate-content": "tsx scripts/validate-content.ts",
     "pagefind": "pagefind --site dist",
-    "prebuild": "pnpm validate-content || true",
-    "postbuild": "pnpm pagefind || true",
+    "prebuild": "pnpm validate-content",
+    "postbuild": "pnpm pagefind",
     "test": "vitest run"
   },
   "dependencies": {

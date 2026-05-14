@@ -33,7 +33,7 @@ describe("Tag and category pages", () => {
   it("category page contains filtered content heading", () => {
     const html = readFileSync(
       resolve(distDir, "blog/category/技术/index.html"),
-      "utf-8"
+      "utf-8",
     );
     // The category page should show content related to this category
     expect(html.length).toBeGreaterThan(1000);
@@ -43,7 +43,7 @@ describe("Tag and category pages", () => {
   it("tag page contains tag label in heading or filter", () => {
     const html = readFileSync(
       resolve(distDir, "blog/tag/TypeScript/index.html"),
-      "utf-8"
+      "utf-8",
     );
     expect(html.length).toBeGreaterThan(1000);
     expect(html).toContain("TypeScript");

@@ -1,0 +1,10 @@
+node_modules
+dist
+.astro
+.vercel
+pnpm-lock.yaml
+
+# Spec docs (markdown that we don't enforce style on)
+design.md
+requirements.md
+tasks.md

@@ -12,13 +12,25 @@ describe("Conditional rendering", () => {
     expect(html).toContain("xluk277167@gmail.com");
   });
 
-  it("social links are rendered when configured in site config", () => {
-    // Sample data has GitHub, LinkedIn, Twitter configured
+  it("social links are rendered when configured, hidden when absent", () => {
     const html = readFileSync(resolve(distDir, "index.html"), "utf-8");
-    expect(html).toContain('class="flex gap-3 mt-1"');
-    // Social link URLs should be present
-    expect(html).toContain("github.com");
-    expect(html).toContain("linkedin.com");
+    const siteYml = readFileSync(
+      resolve(import.meta.dirname, "../../src/content/site/site.yml"),
+      "utf-8",
+    );
+
+    // Per Requirement 10.8: 未配置的社交平台不渲染
+    // The container <div class="flex gap-3 mt-1"> always exists; whether each
+    // platform's <a> appears must mirror the site config.
+    const hasGithub = /^\s*github:\s*\S/m.test(siteYml);
+    const hasLinkedin = /^\s*linkedin:\s*\S/m.test(siteYml);
+    const hasTwitter = /^\s*twitter:\s*\S/m.test(siteYml);
+
+    expect(html.includes("github.com")).toBe(hasGithub);
+    expect(html.includes("linkedin.com")).toBe(hasLinkedin);
+    // Twitter URLs may live on x.com or twitter.com; check the aria-label as a
+    // proxy for "the link element exists".
+    expect(html.includes('aria-label="Twitter"')).toBe(hasTwitter);
   });
 
   it("uses page renders items with URLs as external links", () => {
@@ -46,7 +58,7 @@ describe("Conditional rendering", () => {
   it("project detail page renders without demo/repo links when absent", () => {
     const html = readFileSync(
       resolve(distDir, "projects/example-project/index.html"),
-      "utf-8"
+      "utf-8",
     );
     // The sample project has no demo/repo URLs configured
     // Verify the project detail page loads and shows content

@@ -50,10 +50,7 @@ describe("Journal truncation", () => {
     const secondArticleIdx = html.indexOf("<article", firstDateIdx - 500);
     if (secondArticleIdx > -1) {
       // Get a slice from this article to the end of page
-      const articleSlice = html.slice(
-        secondArticleIdx,
-        secondArticleIdx + 800
-      );
+      const articleSlice = html.slice(secondArticleIdx, secondArticleIdx + 800);
       // Short entry should NOT contain <details> — it renders directly as <p>
       expect(articleSlice).not.toContain("<details");
       expect(articleSlice).toContain(shortEntryText);

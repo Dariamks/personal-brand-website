@@ -83,13 +83,15 @@ const description = "个人简历 - 工作经历与教育背景";
         )}
       </div>
 
-      <!-- Sidebar: PDF Download Button (desktop: sticky) -->
+      <!-- Sidebar: PDF Preview Button (desktop: sticky) -->
       <aside class="hidden lg:block">
         <div class="sticky top-24">
-          <button
-            type="button"
-            id="download-pdf-btn"
-            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors duration-200 cursor-pointer"
+          <a
+            id="preview-pdf-btn"
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors duration-200 cursor-pointer no-underline"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -102,12 +104,11 @@ const description = "个人简历 - 工作经历与教育背景";
               class="w-4 h-4"
               aria-hidden="true"
             >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+              <circle cx="12" cy="12" r="3" />
             </svg>
-            下载 PDF 简历
-          </button>
+            <span data-pdf-label>在线预览简历</span>
+          </a>
           <p id="pdf-status" class="mt-2 text-xs text-[var(--color-fg-muted)] hidden"></p>
         </div>
       </aside>
@@ -115,10 +116,12 @@ const description = "个人简历 - 工作经历与教育背景";
 
     <!-- Mobile PDF button (visible <1024px) -->
     <div class="lg:hidden mt-12 text-center">
-      <button
-        type="button"
-        id="download-pdf-btn-mobile"
-        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors duration-200 cursor-pointer"
+      <a
+        id="preview-pdf-btn-mobile"
+        href="/resume.pdf"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors duration-200 cursor-pointer no-underline"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -131,12 +134,11 @@ const description = "个人简历 - 工作经历与教育背景";
           class="w-4 h-4"
           aria-hidden="true"
         >
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" y1="15" x2="12" y2="3" />
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
         </svg>
-        下载 PDF 简历
-      </button>
+        <span data-pdf-label>在线预览简历</span>
+      </a>
       <p id="pdf-status-mobile" class="mt-2 text-xs text-[var(--color-fg-muted)] hidden"></p>
     </div>
   </div>
@@ -144,31 +146,24 @@ const description = "个人简历 - 工作经历与教育背景";
 
 <script is:inline>
   (function () {
-    function setupDownload(btnId: string, statusId: string) {
-      const btn = document.getElementById(btnId);
-      const status = document.getElementById(statusId);
-      if (!btn || !status) return;
-
-      btn.addEventListener("click", () => {
-        // Try to navigate to /resume.pdf
-        const link = document.createElement("a");
-        link.href = "/resume.pdf";
-        link.download = "resume.pdf";
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // Show status briefly
-        status.classList.remove("hidden");
-        status.textContent = "正在下载...";
-        setTimeout(() => {
-          status.textContent = "如未自动下载，请检查 /resume.pdf 文件是否存在";
-        }, 2000);
-      });
-    }
-
-    setupDownload("download-pdf-btn", "pdf-status");
-    setupDownload("download-pdf-btn-mobile", "pdf-status-mobile");
+    // Probe whether /resume.pdf exists; if not, gracefully degrade.
+    fetch("/resume.pdf", { method: "HEAD" })
+      .then((res) => {
+        if (res.ok) return;
+        document.querySelectorAll('a[id^="preview-pdf-btn"]').forEach((el) => {
+          el.removeAttribute("href");
+          el.removeAttribute("target");
+          el.classList.add("pointer-events-none", "opacity-60");
+          const label = el.querySelector("[data-pdf-label]");
+          if (label) label.textContent = "简历准备中";
+        });
+        ["pdf-status", "pdf-status-mobile"].forEach((id) => {
+          const status = document.getElementById(id);
+          if (!status) return;
+          status.classList.remove("hidden");
+          status.textContent = "PDF 简历正在准备，可稍后再回";
+        });
+      })
+      .catch(() => {});
   })();
 </script>

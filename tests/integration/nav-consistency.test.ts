@@ -45,7 +45,15 @@ describe("Navigation consistency", () => {
   it("nav contains the 7 primary links in order", () => {
     const html = readFileSync(resolve(distDir, "index.html"), "utf-8");
     const navSection = html.slice(html.indexOf("<nav"), html.indexOf("</nav>"));
-    const navOrder = ["Home", "About", "Resume", "Projects", "Blog", "Journal", "Now"];
+    const navOrder = [
+      "Home",
+      "About",
+      "Resume",
+      "Projects",
+      "Blog",
+      "Journal",
+      "Now",
+    ];
     let lastIdx = -1;
     for (const label of navOrder) {
       const idx = navSection.indexOf(label);

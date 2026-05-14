@@ -17,6 +17,8 @@ jobs:
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec astro sync
+      - run: pnpm lint
+      - run: pnpm validate-content
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm test

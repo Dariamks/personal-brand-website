@@ -5,7 +5,9 @@ import { resolve } from "path";
 const distDir = resolve(import.meta.dirname, "../../dist");
 const siteUrl = "http://localhost:4321";
 
-function getAllExternalLinks(html: string): { href: string; target: string; rel: string }[] {
+function getAllExternalLinks(
+  html: string,
+): { href: string; target: string; rel: string }[] {
   const linkRegex = /<a\s+[^>]*href="([^"]*)"[^>]*>/g;
   const targetRegex = /target="([^"]*)"/;
   const relRegex = /rel="([^"]*)"/;
@@ -14,7 +16,11 @@ function getAllExternalLinks(html: string): { href: string; target: string; rel:
   let match;
   while ((match = linkRegex.exec(html)) !== null) {
     const href = match[1];
-    if (href.startsWith("http") && !href.includes("localhost") && !href.includes("example.com")) {
+    if (
+      href.startsWith("http") &&
+      !href.includes("localhost") &&
+      !href.includes("example.com")
+    ) {
       const fullTag = match[0];
       results.push({
         href,

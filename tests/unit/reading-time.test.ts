@@ -12,10 +12,13 @@ describe("readingTime", () => {
         }),
         ({ zhChars, enWords }) => {
           const result = readingTime(zhChars, enWords);
-          const expected = Math.max(1, Math.ceil(zhChars / 300 + enWords / 200));
+          const expected = Math.max(
+            1,
+            Math.ceil(zhChars / 300 + enWords / 200),
+          );
           expect(result).toBe(expected);
-        }
-      )
+        },
+      ),
     );
   });
 
@@ -28,8 +31,8 @@ describe("readingTime", () => {
           const result = readingTime(zhChars, enWords);
           expect(Number.isInteger(result)).toBe(true);
           expect(result).toBeGreaterThanOrEqual(1);
-        }
-      )
+        },
+      ),
     );
   });
 
@@ -44,8 +47,8 @@ describe("readingTime", () => {
           const base = readingTime(zhChars, enWords);
           const increased = readingTime(zhChars + extraZh, enWords + extraEn);
           expect(increased).toBeGreaterThanOrEqual(base);
-        }
-      )
+        },
+      ),
     );
   });
 });

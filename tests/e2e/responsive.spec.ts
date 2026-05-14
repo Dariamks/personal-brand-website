@@ -6,7 +6,12 @@ const viewports = [
   { name: "desktop", width: 1280, height: 900 },
 ];
 
-const testPages = ["/", "/blog/2025-01-15-hello-world", "/journal", "/projects"];
+const testPages = [
+  "/",
+  "/blog/2025-01-15-hello-world",
+  "/journal",
+  "/projects",
+];
 
 test.describe("Responsive layout", () => {
   for (const vp of viewports) {
