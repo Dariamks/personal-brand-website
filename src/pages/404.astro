@@ -1,0 +1,15 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="404 - 页面未找到" description="页面不存在">
+  <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
+    <h1 class="text-4xl font-medium mb-4">404</h1>
+    <p class="text-[var(--color-fg-muted)] mb-8">这里什么都没有。</p>
+    <nav aria-label="页脚导航" class="flex gap-6">
+      <a href="/" class="text-[var(--color-accent)] hover:underline">回到首页</a>
+      <a href="/blog" class="text-[var(--color-accent)] hover:underline">去看看博客</a>
+      <a href="/journal" class="text-[var(--color-accent)] hover:underline">去看看日志</a>
+    </nav>
+  </div>
+</BaseLayout>

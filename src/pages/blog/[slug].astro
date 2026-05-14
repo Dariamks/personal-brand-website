@@ -1,0 +1,56 @@
+---
+import { getCollection } from "astro:content";
+import PostLayout from "../../layouts/PostLayout.astro";
+import Prose from "../../components/Prose.astro";
+import { estimateFromMarkdown } from "../../lib/readingTime";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", (p) => !p.data.draft);
+  return posts.map((p) => ({
+    params: { slug: p.slug },
+    props: { post: p },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+const body = post.body || "";
+
+// Calculate reading time from raw body
+const minutes = estimateFromMarkdown(body);
+
+// Build JSON-LD structured data
+const ldJson = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  datePublished: post.data.date,
+  dateModified: post.data.updated || post.data.date,
+  author: { "@type": "Person", name: "站主" },
+  description: post.data.summary,
+};
+---
+
+<PostLayout
+  title={post.data.title}
+  description={post.data.summary}
+  ogImage={post.data.cover ? post.data.cover.src : undefined}
+  publishDate={post.data.date}
+  updatedDate={post.data.updated}
+  category={post.data.category}
+  tags={post.data.tags}
+  readingTime={minutes}
+>
+  <!-- Pagefind metadata -->
+  <div class="hidden">
+    <span data-pagefind-meta="source:Blog"></span>
+    <span data-pagefind-filter={`category:${post.data.category}`}></span>
+  </div>
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json" set:html={JSON.stringify(ldJson)} />
+
+  <Prose>
+    <Content />
+  </Prose>
+</PostLayout>

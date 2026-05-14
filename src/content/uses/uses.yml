@@ -1,0 +1,38 @@
+groups:
+  - category: 硬件
+    items:
+      - name: MacBook Pro 14"
+        note: 性能足够，日常开发主力机。
+  - category: 软件/开发工具
+    items:
+      - name: IntelliJ IDEA
+        note: Java 开发首选 IDE，重构和调试功能强大。
+        url: https://www.jetbrains.com/idea/
+      - name: VS Code
+        note: 轻量编辑器，用于前端、Markdown 和脚本编写。
+        url: https://code.visualstudio.com/
+      - name: DataGrip
+        note: 数据库管理工具，SQL 编写和查询分析效率高。
+        url: https://www.jetbrains.com/datagrip/
+      - name: Postman / ApiPost
+        note: 接口调试和 API 文档管理。
+      - name: Git / GitHub
+        note: 版本控制和代码协作。
+      - name: Docker
+        note: 容器化部署，统一开发与生产环境。
+  - category: 书籍
+    items:
+      - name: 《高性能 MySQL》
+        note: MySQL 索引优化、查询调优、复制与扩展的权威参考。
+      - name: 《Netty 实战》
+        note: 系统学习 Netty 网络编程，涵盖事件循环、ChannelPipeline 与编解码。
+      - name: 《Spring 揭秘》
+        note: 深入 Spring IoC 容器、AOP 与事务管理的底层实现原理。
+  - category: 课程/文章推荐
+    items:
+      - name: The Missing Semester of Your CS Education
+        note: MIT 出品，补齐学校没教的 Shell、Vim、Git 等工具链知识。
+        url: https://missing.csail.mit.edu/
+      - name: Java 全栈知识体系
+        note: Java 面试和学习路线图，涵盖 JVM、并发、数据库、分布式等。
+        url: https://pdai.tech/

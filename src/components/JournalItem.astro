@@ -1,0 +1,56 @@
+---
+interface Props {
+  date: string;
+  body: string;
+  tags?: string[];
+  slug: string;
+}
+
+const { date, body, tags = [], slug } = Astro.props;
+const isLong = body.length > 120;
+const truncated = isLong ? body.slice(0, 120) + "..." : body;
+---
+
+<article class="border-b border-[var(--color-border)] py-5 last:border-b-0">
+  <div class="flex items-center gap-3 mb-2">
+    <time datetime={date} class="text-xs text-[var(--color-fg-muted)] font-mono">
+      {date.slice(0, 10)}
+    </time>
+
+    {tags.length > 0 && (
+      <div class="flex flex-wrap gap-1">
+        {tags.map((tag) => (
+          <span class="inline-block px-1.5 py-0.5 text-xs rounded bg-[var(--color-code-bg)] text-[var(--color-fg-muted)]">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    )}
+  </div>
+
+  {isLong ? (
+    <details class="group/details">
+      <summary class="cursor-pointer list-none text-sm text-[var(--color-fg-muted)] leading-relaxed marker:hidden">
+        <span>{truncated}</span>
+        <span class="inline-block ml-1 text-[var(--color-accent)] text-xs group-open/details:hidden">
+          展开全文
+        </span>
+      </summary>
+      <p class="mt-2 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+        {body}
+      </p>
+      <span class="inline-block mt-1 text-[var(--color-accent)] text-xs cursor-pointer group-open/details:inline-block hidden">
+        收起
+      </span>
+    </details>
+  ) : (
+    <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed">{body}</p>
+  )}
+
+  <a
+    href={`/journal/${slug}`}
+    class="inline-block mt-2 text-xs text-[var(--color-accent)] hover:underline no-underline transition-colors duration-200"
+  >
+    查看详情 &rarr;
+  </a>
+</article>

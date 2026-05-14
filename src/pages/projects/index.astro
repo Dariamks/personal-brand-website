@@ -1,0 +1,51 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+
+const projects = await getCollection("projects", (p) => !p.data.draft);
+projects.sort((a, b) => {
+  const dateDiff = b.data.date.localeCompare(a.data.date);
+  if (dateDiff !== 0) return dateDiff;
+  return a.data.title.localeCompare(b.data.title);
+});
+---
+
+<BaseLayout
+  title="项目"
+  description="我参与和开发的项目合集"
+  currentPath="/projects"
+>
+  <div class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <h1 class="text-3xl sm:text-4xl font-bold text-[var(--color-fg)] mb-2">
+      项目
+    </h1>
+    <p class="text-[var(--color-fg-muted)] mb-8">
+      我参与和开发的一些项目
+    </p>
+
+    {
+      projects.length === 0 ? (
+        <div class="flex items-center justify-center py-24">
+          <p class="text-[var(--color-fg-muted)] text-lg">
+            暂无项目，敬请期待
+          </p>
+        </div>
+      ) : (
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {projects.map((entry) => (
+            <ProjectCard
+              title={entry.data.title}
+              summary={entry.data.summary}
+              stack={entry.data.stack}
+              slug={entry.slug}
+              cover={entry.data.cover ?? undefined}
+              demo={entry.data.demo}
+              repo={entry.data.repo}
+            />
+          ))}
+        </div>
+      )
+    }
+  </div>
+</BaseLayout>

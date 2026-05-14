@@ -1,0 +1,327 @@
+---
+import ThemeToggle from "./ThemeToggle.astro";
+import { getCollection } from "astro:content";
+
+interface Props {
+  currentPath?: string;
+}
+
+const { currentPath } = Astro.props;
+
+// Read site config for brand name
+let brandName = "NAME.";
+try {
+  const siteEntries = await getCollection("site");
+  if (siteEntries.length > 0) {
+    brandName = siteEntries[0].data.name;
+  }
+} catch {
+  // Fallback if content config doesn't exist yet
+}
+
+const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/resume", label: "Resume" },
+  { href: "/projects", label: "Projects" },
+  { href: "/blog", label: "Blog" },
+  { href: "/journal", label: "Journal" },
+  { href: "/now", label: "Now" },
+];
+
+const moreItems = [
+  { href: "/skills", label: "Skills" },
+  { href: "/uses", label: "Uses" },
+];
+
+const path = currentPath || Astro.url?.pathname || "/";
+
+function isActive(href: string): boolean {
+  if (href === "/") return path === "/";
+  return path.startsWith(href);
+}
+---
+
+<nav
+  class="sticky top-0 z-40 bg-[var(--color-bg)]/95 backdrop-blur-sm border-b border-[var(--color-border)]"
+  aria-label="主导航"
+>
+  <div class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-14">
+      <!-- Brand -->
+      <a
+        href="/"
+        class="text-lg font-semibold text-[var(--color-fg)] hover:text-[var(--color-accent)] transition-colors duration-200 no-underline shrink-0"
+        aria-label={`${brandName} - 回到首页`}
+      >
+        {brandName}
+      </a>
+
+      <!-- Desktop nav items (≥1024px) -->
+      <div class="hidden lg:flex lg:items-center lg:gap-0.5">
+        {
+          navItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <a
+                href={item.href}
+                class={`px-3 py-2 text-sm rounded-md transition-colors duration-200 no-underline ${
+                  active
+                    ? "text-[var(--color-accent)] underline underline-offset-4 decoration-2"
+                    : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-code-bg)]"
+                }`}
+                {...(active ? { "aria-current": "page" as const } : {})}
+              >
+                {item.label}
+              </a>
+            );
+          })
+        }
+
+        <!-- More dropdown -->
+        <div class="relative group" id="more-dropdown">
+          <button
+            id="more-btn"
+            type="button"
+            class="px-3 py-2 text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-code-bg)] rounded-md transition-colors duration-200 cursor-pointer flex items-center gap-1"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            More
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              class="w-4 h-4 transition-transform duration-200 group-hover:rotate-180"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+          <div
+            class="absolute right-0 top-full mt-1 w-36 py-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50"
+          >
+            {moreItems.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <a
+                  href={item.href}
+                  class={`block px-4 py-2 text-sm no-underline transition-colors duration-200 ${
+                    active
+                      ? "text-[var(--color-accent)] bg-[var(--color-code-bg)]"
+                      : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-code-bg)]"
+                  }`}
+                  {...(active ? { "aria-current": "page" as const } : {})}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side: Search + ThemeToggle + Mobile hamburger -->
+      <div class="flex items-center gap-1">
+        <!-- Search icon button -->
+        <button
+          type="button"
+          id="search-toggle"
+          aria-label="搜索"
+          class="p-2 rounded-md text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-code-bg)] transition-colors duration-200 cursor-pointer"
+          onclick="window.location.href='/search'"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-5 h-5"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
+
+        <ThemeToggle />
+
+        <!-- Mobile hamburger (visible <1024px) -->
+        <button
+          id="mobile-menu-btn"
+          type="button"
+          aria-label="菜单"
+          aria-expanded="false"
+          class="p-2 rounded-md text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-code-bg)] transition-colors duration-200 cursor-pointer lg:hidden"
+        >
+          <svg
+            id="hamburger-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-5 h-5"
+            aria-hidden="true"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+          <svg
+            id="close-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-5 h-5 hidden"
+            aria-hidden="true"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile menu panel -->
+  <div
+    id="mobile-menu"
+    class="hidden border-t border-[var(--color-border)] bg-[var(--color-bg)] lg:hidden"
+  >
+    <div class="max-w-[72rem] mx-auto px-4 py-3 flex flex-col gap-1">
+      {navItems.map((item) => {
+        const active = isActive(item.href);
+        return (
+          <a
+            href={item.href}
+            class={`px-3 py-2.5 text-sm rounded-md no-underline transition-colors duration-200 ${
+              active
+                ? "text-[var(--color-accent)] bg-[var(--color-code-bg)] font-medium"
+                : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-code-bg)]"
+            }`}
+            {...(active ? { "aria-current": "page" as const } : {})}
+          >
+            {item.label}
+          </a>
+        );
+      })}
+
+      <hr class="my-1 border-[var(--color-border)]" />
+
+      {moreItems.map((item) => {
+        const active = isActive(item.href);
+        return (
+          <a
+            href={item.href}
+            class={`px-3 py-2.5 text-sm rounded-md no-underline transition-colors duration-200 ${
+              active
+                ? "text-[var(--color-accent)] bg-[var(--color-code-bg)] font-medium"
+                : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-code-bg)]"
+            }`}
+            {...(active ? { "aria-current": "page" as const } : {})}
+          >
+            {item.label}
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</nav>
+
+<script is:inline>
+  (function () {
+    const btn = document.getElementById("mobile-menu-btn");
+    const menu = document.getElementById("mobile-menu");
+    const hamburger = document.getElementById("hamburger-icon");
+    const close = document.getElementById("close-icon");
+    if (!btn || !menu || !hamburger || !close) return;
+
+    function open() {
+      menu.classList.remove("hidden");
+      hamburger.classList.add("hidden");
+      close.classList.remove("hidden");
+      btn.setAttribute("aria-expanded", "true");
+    }
+    function closeMenu() {
+      menu.classList.add("hidden");
+      hamburger.classList.remove("hidden");
+      close.classList.add("hidden");
+      btn.setAttribute("aria-expanded", "false");
+    }
+
+    btn.addEventListener("click", () => {
+      if (menu.classList.contains("hidden")) open();
+      else closeMenu();
+    });
+
+    // Close on Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !menu.classList.contains("hidden")) {
+        closeMenu();
+        btn.focus();
+      }
+    });
+
+    // More dropdown: toggle aria-expanded on click and keyboard
+    const moreBtn = document.getElementById("more-btn");
+    const dropdown = document.getElementById("more-dropdown");
+    if (moreBtn && dropdown) {
+      function openDropdown() {
+        moreBtn.setAttribute("aria-expanded", "true");
+      }
+      function closeDropdown() {
+        moreBtn.setAttribute("aria-expanded", "false");
+      }
+
+      moreBtn.addEventListener("click", () => {
+        if (moreBtn.getAttribute("aria-expanded") === "true") {
+          closeDropdown();
+        } else {
+          openDropdown();
+        }
+      });
+
+      moreBtn.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openDropdown();
+          // Focus first item in dropdown
+          const firstItem = dropdown.querySelector("a");
+          if (firstItem) firstItem.focus();
+        }
+      });
+
+      // Close dropdown when focus leaves the dropdown wrapper
+      dropdown.addEventListener("focusout", (e) => {
+        // setTimeout so focus has time to move before we check
+        setTimeout(() => {
+          if (!dropdown.contains(document.activeElement)) {
+            closeDropdown();
+          }
+        }, 0);
+      });
+
+      // Close on Escape when dropdown is open
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && moreBtn.getAttribute("aria-expanded") === "true") {
+          closeDropdown();
+          moreBtn.focus();
+        }
+      });
+    }
+  })();
+</script>

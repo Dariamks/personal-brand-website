@@ -1,0 +1,72 @@
+---
+title: "你好，世界"
+date: "2025-01-15"
+category: "技术"
+tags: ["TypeScript", "Web"]
+summary: "这是我的第一篇技术博客文章。"
+draft: false
+---
+
+## 为什么开始写博客
+
+我一直觉得，**写作是思考的延伸**。当我们把头脑中的想法转化为文字时，模糊的概念会变得清晰，碎片化的知识会形成体系。
+
+### 技术写作的价值
+
+在软件开发领域，技术写作有着不可替代的价值：
+
+- 帮助他人快速上手新技术
+- 沉淀团队知识，降低沟通成本
+- 建立个人品牌，拓展职业机会
+
+## 第一段代码
+
+下面是一个简单的 TypeScript 示例：
+
+```ts
+interface BlogPost {
+  title: string;
+  date: string;
+  tags: string[];
+  summary: string;
+}
+
+function createPost(post: BlogPost): string {
+  return `📝 ${post.title} — ${post.date}`;
+}
+
+const myFirstPost: BlogPost = {
+  title: "你好，世界",
+  date: "2025-01-15",
+  tags: ["TypeScript", "Web"],
+  summary: "这是我的第一篇技术博客文章。",
+};
+
+console.log(createPost(myFirstPost));
+```
+
+## 关于数学公式的支持
+
+这个博客支持 KaTeX 数学公式渲染。爱因斯坦的质能方程：
+
+$$
+E = mc^2
+$$
+
+这是一个优雅而简洁的公式，它揭示了质量与能量之间的深刻关系。
+
+## 图片引用
+
+下面是一张示例图片：
+
+![示例图片](./images/placeholder.png)
+
+## 接下来的计划
+
+我会在这个博客上分享以下主题：
+
+1. **前端工程化实践** — 从工具链到架构设计
+2. **TypeScript 深入理解** — 类型体操与实战技巧
+3. **开源项目经验** — 参与与维护开源项目的心得
+
+感谢你的阅读，我们下一篇文章见！

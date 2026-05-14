@@ -1,0 +1,81 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import TOC from "../components/TOC.astro";
+import ReadingProgress from "../components/ReadingProgress.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  publishDate: string;
+  updatedDate?: string;
+  category: string;
+  tags: string[];
+  readingTime: number;
+}
+
+const {
+  title,
+  description,
+  ogImage,
+  publishDate,
+  updatedDate,
+  category,
+  tags,
+  readingTime: rt,
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description} ogImage={ogImage}>
+  <ReadingProgress />
+  <div class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="flex gap-8">
+      <!-- Main content -->
+      <article class="flex-1 min-w-0" data-pagefind-body>
+        <header class="mb-8">
+          <h1 class="text-3xl font-medium text-[var(--color-fg)] mb-4">
+            {title}
+          </h1>
+          <div
+            class="flex flex-wrap items-center gap-3 text-sm text-[var(--color-fg-muted)]"
+          >
+            <time datetime={publishDate}>{publishDate}</time>
+            {
+              updatedDate && (
+                <span>
+                  · 更新于 <time datetime={updatedDate}>{updatedDate}</time>
+                </span>
+              )
+            }
+            <span>
+              · <a
+                href={`/blog/category/${category}`}
+                class="text-[var(--color-accent)] no-underline hover:underline"
+              >
+                {category}
+              </a>
+            </span>
+            <span>· {rt} 分钟</span>
+          </div>
+          {
+            tags.length > 0 && (
+              <div class="flex flex-wrap gap-1.5 mt-3">
+                {tags.map((tag) => (
+                  <a
+                    href={`/blog/tag/${tag}`}
+                    class="text-xs px-2 py-0.5 rounded-full border border-[var(--color-border)] text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] no-underline transition-colors duration-200"
+                  >
+                    #{tag}
+                  </a>
+                ))}
+              </div>
+            )
+          }
+        </header>
+        <slot />
+      </article>
+      <!-- TOC sidebar -->
+      <TOC />
+    </div>
+  </div>
+</BaseLayout>

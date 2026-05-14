@@ -1,0 +1,16 @@
+name: 向子豪
+tagline: Java 后端开发工程师
+intro: 1 年后端开发经验，专注于 Java 生态与工业物联网。热爱从底层原理出发理解技术，追求可读、可维护、可扩展的代码。
+heroTags:
+  - Java
+  - Spring Cloud
+  - Netty
+  - Redis
+  - MySQL
+nowLinkText: 看看我现在在做什么
+url: https://example.com
+email: xluk277167@gmail.com
+social:
+  github: https://github.com/example
+  linkedin: https://linkedin.com/in/example
+  twitter: https://twitter.com/example

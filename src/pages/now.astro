@@ -1,0 +1,63 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { diffDays, formatDate } from "../lib/date";
+
+// Now page content
+const nowEntries = await getCollection("now");
+const now = nowEntries.length > 0 ? nowEntries[0] : null;
+
+// Check staleness (> 90 days)
+const isStale = now
+  ? diffDays(new Date(), now.data.lastUpdated) > 90
+  : false;
+
+const lastUpdatedDisplay = now ? formatDate(now.data.lastUpdated) : "";
+
+let Content: any = null;
+if (now) {
+  const rendered = await now.render();
+  Content = rendered.Content;
+}
+
+const description = "我现在在做什么、学什么、关注什么";
+---
+
+<BaseLayout
+  title="Now"
+  description={description}
+  currentPath="/now"
+>
+  <div class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="max-w-[68ch] mx-auto">
+      <!-- Page Header -->
+      <div class="mb-10">
+        <h1 class="text-3xl font-bold text-[var(--color-fg)] mb-2">Now</h1>
+        <p class="text-sm text-[var(--color-fg-muted)]">
+          最后更新：{lastUpdatedDisplay || "—"}
+        </p>
+      </div>
+
+      <!-- Stale Banner -->
+      {isStale && (
+        <div class="mb-10 border border-[var(--color-border)] rounded-r-lg bg-[var(--color-code-bg)] px-4 py-3" style="border-left: 4px solid var(--color-accent)">
+          <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed">
+            <span class="font-semibold text-[var(--color-fg)]">内容可能已过时</span>
+            {" "}— 超过 90 天未更新
+          </p>
+        </div>
+      )}
+
+      <!-- MDX Content -->
+      {Content ? (
+        <div class="prose prose-neutral max-w-none">
+          <Content />
+        </div>
+      ) : (
+        <p class="text-sm text-[var(--color-fg-muted)] py-12 text-center">
+          暂无内容
+        </p>
+      )}
+    </div>
+  </div>
+</BaseLayout>

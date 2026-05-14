@@ -1,0 +1,102 @@
+---
+// Search Island — loads Pagefind on focus
+---
+<div id="search-container" class="w-full max-w-2xl">
+  <!-- Search input -->
+  <div class="relative">
+    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-fg-muted)]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+    <input
+      id="search-input"
+      type="search"
+      placeholder="搜索博客文章和日志..."
+      class="w-full pl-10 pr-4 py-3 text-base bg-[var(--color-code-bg)] text-[var(--color-fg)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-shadow duration-200"
+      autocomplete="off"
+    />
+  </div>
+
+  <!-- Results area -->
+  <div id="search-results" class="mt-6 space-y-6"></div>
+</div>
+
+<script is:inline type="module">
+  import { createInstance } from "/pagefind/pagefind.js";
+
+  const input = document.getElementById("search-input");
+  const results = document.getElementById("search-results");
+  if (!input || !results) throw new Error("Search elements not found");
+
+  let pagefind = null;
+  let loading = false;
+  let debounceTimer;
+
+  async function loadPagefind() {
+    if (pagefind) return pagefind;
+    if (loading) return null;
+    loading = true;
+    try {
+      pagefind = await createInstance();
+      return pagefind;
+    } catch (err) {
+      console.error("Pagefind load failed:", err);
+      results.innerHTML = '<p class="text-[var(--color-fg-muted)] text-center py-8">搜索暂不可用</p>';
+      return null;
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function doSearch(query) {
+    if (!query.trim()) {
+      results.innerHTML = '';
+      return;
+    }
+
+    const pf = await loadPagefind();
+    if (!pf) return;
+
+    const searchResults = await pf.search(query.trim());
+    if (!searchResults || searchResults.results.length === 0) {
+      results.innerHTML = '<p class="text-[var(--color-fg-muted)] text-center py-8">未找到匹配内容</p>';
+      return;
+    }
+
+    const htmlParts = [];
+    for (const result of searchResults.results.slice(0, 20)) {
+      const data = await result.data();
+      const source = data.meta?.source || (data.url.includes("/blog/") ? "Blog" : "Journal");
+      const sourceClass = source === "Blog" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700";
+
+      htmlParts.push(`
+        <article class="pb-4 border-b border-[var(--color-border)]">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium ${sourceClass}">${source}</span>
+          </div>
+          <a href="${data.url.replace(/\/$/, '')}" class="text-lg font-medium text-[var(--color-accent)] no-underline hover:underline">
+            ${data.meta?.title || data.url.split("/").filter(Boolean).pop() || "无标题"}
+          </a>
+          <p class="text-sm text-[var(--color-fg-muted)] mt-1 leading-relaxed">
+            ${data.excerpt || ""}
+          </p>
+        </article>
+      `);
+    }
+    results.innerHTML = htmlParts.join('');
+  }
+
+  input.addEventListener("focus", () => { loadPagefind(); }, { once: true });
+
+  input.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => { doSearch(input.value); }, 200);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      clearTimeout(debounceTimer);
+      doSearch(input.value);
+    }
+  });
+</script>

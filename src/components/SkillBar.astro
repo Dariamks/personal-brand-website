@@ -1,0 +1,35 @@
+---
+interface Props {
+  name: string;
+  proficiency: string;
+  percent: number;
+}
+
+const { name, proficiency, percent } = Astro.props;
+const totalBlocks = 14;
+const filledBlocks = Math.round(percent / (100 / totalBlocks));
+---
+
+<div class="flex items-center gap-3">
+  <!-- Name -->
+  <span class="text-sm font-medium text-[var(--color-fg)] w-24 shrink-0">
+    {name}
+  </span>
+
+  <!-- Blocks -->
+  <div class="flex gap-1 flex-1" aria-label={`${name}: ${proficiency}`} role="meter" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
+    {Array.from({ length: totalBlocks }).map((_, i) => (
+      <div
+        class={`h-2.5 flex-1 rounded-sm transition-colors duration-200 ${
+          i < filledBlocks ? "bg-[var(--color-fg)]" : "bg-[var(--color-border)]"
+        }`}
+        aria-hidden="true"
+      />
+    ))}
+  </div>
+
+  <!-- Proficiency text -->
+  <span class="text-xs text-[var(--color-fg-muted)] w-16 text-right shrink-0">
+    {proficiency}
+  </span>
+</div>

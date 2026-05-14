@@ -1,0 +1,78 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Prose from "../../components/Prose.astro";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects", (p) => !p.data.draft);
+  return projects.map((p) => ({
+    params: { slug: p.slug },
+    props: { project: p },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await project.render();
+---
+
+<BaseLayout
+  title={project.data.title}
+  description={project.data.summary}
+  canonical={`/projects/${project.slug}`}
+  currentPath={`/projects/${project.slug}`}
+>
+  <article class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <!-- Header section -->
+    <header class="mb-10">
+      <h1 class="text-3xl sm:text-4xl font-bold text-[var(--color-fg)] mb-3">
+        {project.data.title}
+      </h1>
+
+      <p class="text-lg text-[var(--color-fg-muted)] mb-6 leading-relaxed">
+        {project.data.summary}
+      </p>
+
+      <!-- Full stack tags -->
+      <div class="flex flex-wrap gap-1.5 mb-6">
+        {project.data.fullStack.map((tech: string) => (
+          <span class="inline-block px-2.5 py-0.5 text-xs rounded-full bg-[var(--color-code-bg)] text-[var(--color-fg-muted)] border border-[var(--color-border)]">
+            {tech}
+          </span>
+        ))}
+      </div>
+
+      <!-- Demo & Repo buttons -->
+      {(project.data.demo || project.data.repo) && (
+        <div class="flex flex-wrap gap-3">
+          {project.data.demo && (
+            <a
+              href={project.data.demo}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] hover:underline transition-colors duration-200"
+            >
+              Live Demo <span aria-hidden="true">↗</span>
+            </a>
+          )}
+          {project.data.repo && (
+            <a
+              href={project.data.repo}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] hover:underline transition-colors duration-200"
+            >
+              Source Code <span aria-hidden="true">↗</span>
+            </a>
+          )}
+        </div>
+      )}
+    </header>
+
+    <!-- Body section -->
+    <div class="border-t border-[var(--color-border)] pt-10">
+      <Prose>
+        <Content />
+      </Prose>
+    </div>
+  </article>
+</BaseLayout>

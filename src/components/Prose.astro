@@ -1,0 +1,11 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: extra = "" } = Astro.props;
+---
+
+<div class={`prose prose-neutral max-w-[68ch] mx-auto ${extra}`}>
+  <slot />
+</div>

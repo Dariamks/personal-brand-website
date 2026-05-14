@@ -1,0 +1,219 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import BlogCard from "../components/BlogCard.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import JournalItem from "../components/JournalItem.astro";
+import Tag from "../components/Tag.astro";
+
+// Site config
+const siteEntries = await getCollection("site");
+const site = siteEntries.length > 0 ? siteEntries[0].data : null;
+
+// Blog posts (non-draft, sorted by date desc, top 5)
+const blogPosts = (await getCollection("blog", (p) => !p.data.draft))
+  .sort((a, b) => b.data.date.localeCompare(a.data.date))
+  .slice(0, 5);
+
+// Projects (non-draft, sorted by date desc, top 3)
+const projects = (await getCollection("projects", (p) => !p.data.draft))
+  .sort((a, b) => b.data.date.localeCompare(a.data.date))
+  .slice(0, 3);
+
+// Journal entries (non-draft, sorted by date desc, top 3)
+const journalEntries = (await getCollection("journal", (p) => !p.data.draft))
+  .sort((a, b) => b.data.date.localeCompare(a.data.date))
+  .slice(0, 3);
+
+// Helper: strip basic markdown syntax for journal body preview
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/!\[.*?\]\(.*?\)/g, "")           // images
+    .replace(/\[([^\]]*)\]\(.*?\)/g, "$1")     // links
+    .replace(/[*_~`#]+/g, "")                  // bold/italic/strikethrough/code/headings
+    .replace(/^\s*[-*+]\s/gm, "")              // list markers
+    .replace(/\n{2,}/g, "\n")                  // collapse blank lines
+    .trim();
+}
+
+const description = site?.intro ?? "个人网站";
+---
+
+<BaseLayout
+  title={site?.name ?? "Personal Website"}
+  description={description}
+  currentPath="/"
+>
+  <!-- ===== Hero Section ===== -->
+  <section class="min-h-[100svh] flex items-center">
+    <div class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 w-full py-20">
+      <div class="max-w-[68ch]">
+        <!-- Name -->
+        <h1 class="text-4xl font-bold text-[var(--color-fg)] mb-4">
+          {site?.name ?? "你好，我是..."}
+        </h1>
+
+        <!-- Tagline -->
+        <p class="text-xl text-[var(--color-fg-muted)] mb-6">
+          {site?.tagline ?? ""}
+        </p>
+
+        <!-- Intro -->
+        <p class="text-base text-[var(--color-fg-muted)] max-w-prose leading-relaxed mb-6">
+          {site?.intro ?? ""}
+        </p>
+
+        <!-- Hero Tags -->
+        {site?.heroTags && site.heroTags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mb-8">
+            {site.heroTags.map((tag: string) => (
+              <Tag label={tag} />
+            ))}
+          </div>
+        )}
+
+        <!-- Now Link -->
+        {site?.nowLinkText && (
+          <a
+            href="/now"
+            class="inline-flex items-center gap-1.5 text-sm text-[var(--color-accent)] hover:underline no-underline transition-colors duration-200"
+          >
+            {site.nowLinkText}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              class="w-4 h-4"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </a>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 近期项目 Section ===== -->
+  <section
+    aria-labelledby="recent-projects-heading"
+    class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-20"
+  >
+    <div class="flex items-center justify-between mb-8">
+      <h2
+        id="recent-projects-heading"
+        class="text-sm uppercase tracking-wider text-[var(--color-fg-muted)]"
+      >
+        近期项目
+      </h2>
+      <a
+        href="/projects"
+        class="text-sm text-[var(--color-accent)] hover:underline no-underline transition-colors duration-200"
+      >
+        查看全部 &rarr;
+      </a>
+    </div>
+
+    {projects.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {projects.map((project) => (
+          <ProjectCard
+            title={project.data.title}
+            summary={project.data.summary}
+            stack={project.data.stack}
+            slug={project.slug}
+            cover={project.data.cover}
+            demo={project.data.demo}
+            repo={project.data.repo}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="text-sm text-[var(--color-fg-muted)] py-12 text-center">
+        尚无内容，敬请期待
+      </p>
+    )}
+  </section>
+
+  <!-- ===== 近期文章 Section ===== -->
+  <section
+    aria-labelledby="recent-posts-heading"
+    class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-[var(--color-border)]"
+  >
+    <div class="flex items-center justify-between mb-8">
+      <h2
+        id="recent-posts-heading"
+        class="text-sm uppercase tracking-wider text-[var(--color-fg-muted)]"
+      >
+        近期文章
+      </h2>
+      <a
+        href="/blog"
+        class="text-sm text-[var(--color-accent)] hover:underline no-underline transition-colors duration-200"
+      >
+        查看全部 &rarr;
+      </a>
+    </div>
+
+    {blogPosts.length > 0 ? (
+      <div class="flex flex-col gap-4">
+        {blogPosts.map((post) => (
+          <BlogCard
+            title={post.data.title}
+            date={post.data.date}
+            category={post.data.category}
+            tags={post.data.tags}
+            summary={post.data.summary}
+            slug={post.slug}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="text-sm text-[var(--color-fg-muted)] py-12 text-center">
+        尚无内容，敬请期待
+      </p>
+    )}
+  </section>
+
+  <!-- ===== 近期日志 Section ===== -->
+  <section
+    aria-labelledby="recent-journal-heading"
+    class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-[var(--color-border)]"
+  >
+    <div class="flex items-center justify-between mb-8">
+      <h2
+        id="recent-journal-heading"
+        class="text-sm uppercase tracking-wider text-[var(--color-fg-muted)]"
+      >
+        近期日志
+      </h2>
+      <a
+        href="/journal"
+        class="text-sm text-[var(--color-accent)] hover:underline no-underline transition-colors duration-200"
+      >
+        查看全部 &rarr;
+      </a>
+    </div>
+
+    {journalEntries.length > 0 ? (
+      <div class="flex flex-col">
+        {journalEntries.map((entry) => (
+          <JournalItem
+            date={entry.data.date}
+            body={stripMarkdown(entry.body ?? "")}
+            tags={entry.data.tags}
+            slug={entry.slug}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="text-sm text-[var(--color-fg-muted)] py-12 text-center">
+        尚无内容，敬请期待
+      </p>
+    )}
+  </section>
+</BaseLayout>

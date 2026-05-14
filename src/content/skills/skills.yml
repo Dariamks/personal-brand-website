@@ -1,0 +1,43 @@
+groups:
+  - category: 编程语言
+    items:
+      - name: Java
+        proficiency: { kind: level, value: 熟练 }
+  - category: 框架/库
+    items:
+      - name: Spring Boot / Spring MVC
+        proficiency: { kind: level, value: 熟练 }
+      - name: MyBatis / MyBatis-Plus
+        proficiency: { kind: level, value: 熟练 }
+      - name: Spring Cloud
+        proficiency: { kind: level, value: 掌握 }
+      - name: Netty
+        proficiency: { kind: level, value: 掌握 }
+  - category: 工具
+    items:
+      - name: Git / Maven
+        proficiency: { kind: level, value: 熟练 }
+      - name: Docker
+        proficiency: { kind: level, value: 掌握 }
+      - name: Linux
+        proficiency: { kind: level, value: 掌握 }
+      - name: Jenkins CI/CD
+        proficiency: { kind: level, value: 了解 }
+      - name: LLM / Prompt / RAG / Agent
+        proficiency: { kind: level, value: 掌握 }
+  - category: 基础设施/云服务
+    items:
+      - name: MySQL
+        proficiency: { kind: level, value: 熟练 }
+      - name: Redis
+        proficiency: { kind: level, value: 熟练 }
+      - name: RocketMQ / Kafka / RabbitMQ
+        proficiency: { kind: level, value: 掌握 }
+      - name: EMQX (MQTT)
+        proficiency: { kind: level, value: 掌握 }
+  - category: 其他
+    items:
+      - name: TCP / HTTP / MQTT 通信协议
+        proficiency: { kind: level, value: 掌握 }
+      - name: WebSocket 实时推送
+        proficiency: { kind: level, value: 掌握 }

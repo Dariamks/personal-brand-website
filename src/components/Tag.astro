@@ -1,0 +1,26 @@
+---
+interface Props {
+  label: string;
+  href?: string;
+}
+
+const { label, href } = Astro.props;
+
+const baseClass =
+  "inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-[var(--color-code-bg)] text-[var(--color-fg-muted)] border border-[var(--color-border)] transition-colors duration-200";
+---
+
+{
+  href ? (
+    <a
+      href={href}
+      class={`${baseClass} hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] no-underline`}
+      target="_blank"
+      rel="noopener"
+    >
+      {label}
+    </a>
+  ) : (
+    <span class={baseClass}>{label}</span>
+  )
+}

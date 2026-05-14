@@ -1,0 +1,174 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import Timeline from "../components/Timeline.astro";
+
+// Resume data
+const resumeEntries = await getCollection("resume");
+const data = resumeEntries.length > 0 ? resumeEntries[0].data : null;
+
+// Format period from YYYY-MM to readable Chinese
+function formatPeriod(start: string, end: string): string {
+  const fmt = (ym: string) => {
+    const [y, m] = ym.split("-");
+    return `${y}年${m}月`;
+  };
+  const startStr = fmt(start);
+  const endStr = end === "至今" ? "至今" : fmt(end);
+  return `${startStr} — ${endStr}`;
+}
+
+// Build work timeline items
+const workItems = (data?.work ?? []).map((item) => ({
+  title: item.role,
+  subtitle: item.company,
+  period: formatPeriod(item.start, item.end),
+  description: item.description,
+}));
+
+// Build education timeline items
+const educationItems = (data?.education ?? []).map((item) => ({
+  title: `${item.degree} · ${item.major}`,
+  subtitle: item.school,
+  period: formatPeriod(item.start, item.end),
+  description: "",
+}));
+
+const description = "个人简历 - 工作经历与教育背景";
+---
+
+<BaseLayout
+  title="简历"
+  description={description}
+  currentPath="/resume"
+>
+  <div class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="lg:grid lg:grid-cols-[1fr_200px] lg:gap-12">
+      <!-- Main Content -->
+      <div>
+        <!-- Page Header -->
+        <div class="max-w-[68ch] mb-16">
+          <h1 class="text-3xl font-bold text-[var(--color-fg)] mb-2">简历</h1>
+          <p class="text-base text-[var(--color-fg-muted)]">
+            工作经历与教育背景
+          </p>
+        </div>
+
+        {!data ? (
+          <p class="text-sm text-[var(--color-fg-muted)] py-12 text-center max-w-[68ch]">
+            暂无简历数据
+          </p>
+        ) : (
+          <div class="max-w-[68ch]">
+            <!-- Work Experience -->
+            {workItems.length > 0 && (
+              <section class="mb-16">
+                <h2 class="text-lg font-semibold text-[var(--color-fg)] mb-8">
+                  工作经历
+                </h2>
+                <Timeline items={workItems} />
+              </section>
+            )}
+
+            {/* Education */}
+            {educationItems.length > 0 && (
+              <section>
+                <h2 class="text-lg font-semibold text-[var(--color-fg)] mb-8">
+                  教育背景
+                </h2>
+                <Timeline items={educationItems} />
+              </section>
+            )}
+          </div>
+        )}
+      </div>
+
+      <!-- Sidebar: PDF Download Button (desktop: sticky) -->
+      <aside class="hidden lg:block">
+        <div class="sticky top-24">
+          <button
+            type="button"
+            id="download-pdf-btn"
+            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors duration-200 cursor-pointer"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="w-4 h-4"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            下载 PDF 简历
+          </button>
+          <p id="pdf-status" class="mt-2 text-xs text-[var(--color-fg-muted)] hidden"></p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Mobile PDF button (visible <1024px) -->
+    <div class="lg:hidden mt-12 text-center">
+      <button
+        type="button"
+        id="download-pdf-btn-mobile"
+        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors duration-200 cursor-pointer"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="w-4 h-4"
+          aria-hidden="true"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        下载 PDF 简历
+      </button>
+      <p id="pdf-status-mobile" class="mt-2 text-xs text-[var(--color-fg-muted)] hidden"></p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  (function () {
+    function setupDownload(btnId: string, statusId: string) {
+      const btn = document.getElementById(btnId);
+      const status = document.getElementById(statusId);
+      if (!btn || !status) return;
+
+      btn.addEventListener("click", () => {
+        // Try to navigate to /resume.pdf
+        const link = document.createElement("a");
+        link.href = "/resume.pdf";
+        link.download = "resume.pdf";
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Show status briefly
+        status.classList.remove("hidden");
+        status.textContent = "正在下载...";
+        setTimeout(() => {
+          status.textContent = "如未自动下载，请检查 /resume.pdf 文件是否存在";
+        }, 2000);
+      });
+    }
+
+    setupDownload("download-pdf-btn", "pdf-status");
+    setupDownload("download-pdf-btn-mobile", "pdf-status-mobile");
+  })();
+</script>

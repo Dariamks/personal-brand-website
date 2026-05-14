@@ -1,0 +1,46 @@
+---
+interface Item {
+  title: string;
+  subtitle: string;
+  period: string;
+  description: string;
+}
+
+interface Props {
+  items: Item[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="relative">
+  {items.map((item, i) => (
+    <div class={`relative pl-8 pb-8 ${i < items.length - 1 ? "border-l-2 border-[var(--color-border)]" : ""}`}>
+      <!-- Dot on the timeline -->
+      <div
+        class="absolute left-0 top-1.5 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-[var(--color-accent)] bg-[var(--color-bg)]"
+        aria-hidden="true"
+      />
+
+      <!-- Period -->
+      <span class="text-xs font-mono text-[var(--color-fg-muted)] tracking-wide uppercase">
+        {item.period}
+      </span>
+
+      <!-- Title -->
+      <h3 class="mt-1 text-base font-semibold text-[var(--color-fg)]">
+        {item.title}
+      </h3>
+
+      <!-- Subtitle -->
+      <p class="text-sm text-[var(--color-fg-muted)]">{item.subtitle}</p>
+
+      <!-- Description -->
+      {item.description && (
+        <p class="mt-2 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+          {item.description}
+        </p>
+      )}
+    </div>
+  ))}
+</div>

@@ -1,0 +1,86 @@
+---
+import "../styles/global.css";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  canonical?: string;
+  currentPath?: string;
+}
+
+const {
+  title,
+  description = "个人网站",
+  ogImage = "/og-default.svg",
+  canonical,
+  currentPath,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site).href} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site).href} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, Astro.site).href} />
+
+    <!-- Canonical -->
+    {
+      canonical && <link rel="canonical" href={new URL(canonical, Astro.site).href} />
+    }
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Blog RSS"
+      href="/feed.xml"
+    />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Journal RSS"
+      href="/journal/feed.xml"
+    />
+
+    <!-- Theme inline script (blocking, prevents FOUC) -->
+    <script is:inline>
+      (()=>{const e=localStorage.getItem("theme"),o=matchMedia("(prefers-color-scheme: dark)").matches,r=e??(o?"dark":"light");document.documentElement.dataset.theme=r})()
+    </script>
+
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-[var(--color-bg)] focus:text-[var(--color-fg)] focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg focus:outline-2 focus:outline-offset-2 focus:outline"
+    >
+      跳到主内容
+    </a>
+
+    <Nav currentPath={currentPath} />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Footer />
+  </body>
+</html>

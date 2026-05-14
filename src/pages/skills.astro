@@ -1,0 +1,107 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import SkillBar from "../components/SkillBar.astro";
+
+// Skills data
+const skillsEntries = await getCollection("skills");
+const data = skillsEntries.length > 0 ? skillsEntries[0].data : null;
+
+// Fixed category display order
+const CATEGORY_ORDER = [
+  "编程语言",
+  "框架/库",
+  "工具",
+  "基础设施/云服务",
+  "其他",
+] as const;
+
+// Map proficiency to percentage (0-100)
+function toPercent(item: {
+  name: string;
+  proficiency:
+    | { kind: "years"; value: number }
+    | { kind: "level"; value: "熟练" | "掌握" | "了解" }
+    | { kind: "percent"; value: number };
+}): number {
+  const p = item.proficiency;
+  switch (p.kind) {
+    case "years":
+      return Math.min(p.value / 10, 1) * 100;
+    case "level":
+      return p.value === "熟练" ? 90 : p.value === "掌握" ? 60 : 30;
+    case "percent":
+      return p.value;
+  }
+}
+
+// Map proficiency to display label
+function toLabel(item: {
+  name: string;
+  proficiency:
+    | { kind: "years"; value: number }
+    | { kind: "level"; value: string }
+    | { kind: "percent"; value: number };
+}): string {
+  const p = item.proficiency;
+  switch (p.kind) {
+    case "years":
+      return `${p.value} 年`;
+    case "level":
+      return p.value;
+    case "percent":
+      return `${p.value}%`;
+  }
+}
+
+// Build ordered list of categories with their items
+const orderedGroups = CATEGORY_ORDER.map((cat) => {
+  const group = data?.groups?.find((g: any) => g.category === cat);
+  return group ? { category: group.category, items: group.items } : null;
+}).filter(Boolean) as { category: string; items: any[] }[];
+
+const description = "技术技能与熟练度";
+---
+
+<BaseLayout
+  title="技能"
+  description={description}
+  currentPath="/skills"
+>
+  <div class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="max-w-[68ch] mx-auto">
+      <!-- Page Header -->
+      <div class="mb-16">
+        <h1 class="text-3xl font-bold text-[var(--color-fg)] mb-2">技能</h1>
+        <p class="text-base text-[var(--color-fg-muted)]">
+          技术栈与熟练度
+        </p>
+      </div>
+
+      {orderedGroups.length === 0 ? (
+        <p class="text-sm text-[var(--color-fg-muted)] py-12 text-center">
+          暂无技能数据
+        </p>
+      ) : (
+        <div class="flex flex-col gap-12">
+          {orderedGroups.map((group) => (
+            <section>
+              <h2 class="text-lg font-semibold text-[var(--color-fg)] mb-5">
+                {group.category}
+              </h2>
+              <div class="flex flex-col gap-3">
+                {group.items.map((item) => (
+                  <SkillBar
+                    name={item.name}
+                    proficiency={toLabel(item)}
+                    percent={toPercent(item)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

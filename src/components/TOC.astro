@@ -1,0 +1,79 @@
+<div id="toc-container" class="hidden lg:block">
+  <nav aria-label="目录" class="sticky top-20 w-48">
+    <h2 class="text-sm font-medium text-[var(--color-fg)] mb-2">目录</h2>
+    <ol id="toc-list" class="text-sm space-y-1 leading-relaxed"></ol>
+  </nav>
+</div>
+
+<script>
+  (function () {
+  const article = document.querySelector("article");
+  const list = document.getElementById("toc-list");
+  const container = document.getElementById("toc-container");
+  if (!article || !list || !container) return;
+
+  const headings = article.querySelectorAll("h2, h3, h4");
+  if (headings.length === 0) {
+    container.classList.add("hidden");
+    return;
+  }
+
+  // Ensure every heading has an id so the TOC can link to it
+  headings.forEach((h, idx) => {
+    if (!h.id) {
+      h.id = `heading-${idx}-${h.textContent?.trim().slice(0, 20).replace(/\s+/g, "-") || idx}`;
+    }
+  });
+
+  headings.forEach((h) => {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = `#${h.id}`;
+    a.textContent = h.textContent;
+    a.className =
+      "text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] no-underline transition-colors duration-200 toc-item block truncate";
+
+    const level = parseInt(h.tagName.charAt(1));
+    if (level === 3) {
+      a.style.paddingLeft = "1rem";
+    } else if (level >= 4) {
+      a.style.paddingLeft = "2rem";
+    }
+
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelector(`#${CSS.escape(h.id)}`)?.scrollIntoView({
+        behavior: "smooth",
+      });
+    });
+
+    li.appendChild(a);
+    list.appendChild(li);
+  });
+
+  // IntersectionObserver: highlight the currently visible heading
+  const items = list.querySelectorAll("a");
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          for (const item of items) {
+            item.classList.remove("text-[var(--color-accent)]", "font-medium");
+            item.classList.add("text-[var(--color-fg-muted)]");
+          }
+          const link = list.querySelector(
+            `a[href="#${CSS.escape(entry.target.id)}"]`,
+          );
+          if (link) {
+            link.classList.remove("text-[var(--color-fg-muted)]");
+            link.classList.add("text-[var(--color-accent)]", "font-medium");
+          }
+        }
+      }
+    },
+    { rootMargin: "-20% 0px -70% 0px" },
+  );
+
+  headings.forEach((h) => observer.observe(h));
+  })();
+</script>

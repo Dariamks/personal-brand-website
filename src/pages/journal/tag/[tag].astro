@@ -1,0 +1,124 @@
+---
+import { getCollection } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection("journal", j => !j.data.draft);
+
+  // Collect all unique tags
+  const uniqueTags = [...new Set(entries.flatMap(e => e.data.tags || []))];
+
+  return uniqueTags.map(tag => ({
+    params: { tag },
+  }));
+}) satisfies GetStaticPaths;
+
+const { tag } = Astro.params;
+
+// Filter entries by tag, sort by date descending
+const entries = await getCollection("journal", j => !j.data.draft);
+const filteredEntries = entries
+  .filter(e => (e.data.tags || []).includes(tag))
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+// Collect all tags for the filter pills
+const allTags = [...new Set(entries.flatMap(e => e.data.tags || []))].sort();
+
+const currentPath = Astro.url?.pathname || `/journal/tag/${tag}`;
+---
+
+<BaseLayout
+  title={`标签: #${tag} - 日志`}
+  description={`浏览标签为 #${tag} 的日志条目`}
+  currentPath={currentPath}
+>
+  <div class="max-w-[72rem] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h1 class="text-3xl font-medium text-[var(--color-fg)] mb-2">
+      标签: <span class="text-[var(--color-accent)]">#{tag}</span>
+    </h1>
+    <p class="text-[var(--color-fg-muted)] mb-8">筛选标签为 #{tag} 的日志条目。</p>
+
+    <!-- Tag filter pills -->
+    {
+      allTags.length > 0 && (
+        <div class="flex flex-wrap gap-2 mb-8">
+          <a
+            href="/journal"
+            class="text-sm px-3 py-1 rounded-full border border-[var(--color-border)] text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] no-underline transition-colors duration-200"
+          >
+            全部
+          </a>
+          {allTags.map(t => (
+            <a
+              href={`/journal/tag/${t}`}
+              class={`text-sm px-3 py-1 rounded-full border no-underline transition-colors duration-200 ${
+                t === tag
+                  ? "border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-code-bg)]"
+                  : "border-[var(--color-border)] text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]"
+              }`}
+            >
+              #{t}
+            </a>
+          ))}
+        </div>
+      )
+    }
+
+    <!-- Journal entries -->
+    {
+      filteredEntries.length > 0 ? (
+        <div class="space-y-8" data-pagefind-body>
+          {filteredEntries.map(entry => {
+            const body = entry.body || "";
+            const truncated = body.slice(0, 120);
+            const isLong = body.length > 120;
+            return (
+              <article
+                id={entry.slug}
+                class="pb-6 border-b border-[var(--color-border)]"
+                data-pagefind-meta={`source:Journal,tag:${tag}`}
+              >
+                <div class="flex items-center gap-2 mb-2">
+                  <time datetime={entry.data.date} class="text-sm text-[var(--color-fg-muted)] font-mono">
+                    {entry.data.date}
+                  </time>
+                  {entry.data.tags?.map(t => (
+                    <a
+                      href={`/journal/tag/${t}`}
+                      class={`text-xs px-1.5 py-0.5 rounded border no-underline transition-colors duration-200 ${
+                        t === tag
+                          ? "border-[var(--color-accent)] text-[var(--color-accent)]"
+                          : "border-[var(--color-border)] text-[var(--color-fg-muted)] hover:text-[var(--color-accent)]"
+                      }`}
+                    >
+                      #{t}
+                    </a>
+                  ))}
+                </div>
+
+                {isLong ? (
+                  <details class="group cursor-pointer">
+                    <summary class="text-[var(--color-fg)] leading-relaxed marker:content-none [&::-webkit-details-marker]:hidden">
+                      <span>{truncated}...</span>
+                      <span class="ml-1 text-xs text-[var(--color-accent)]">展开全文</span>
+                    </summary>
+                    <div class="mt-2 text-[var(--color-fg)] leading-relaxed whitespace-pre-wrap">
+                      {body}
+                    </div>
+                  </details>
+                ) : (
+                  <p class="text-[var(--color-fg)] leading-relaxed whitespace-pre-wrap">{body}</p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div class="text-center py-16 text-[var(--color-fg-muted)]">
+          <p>暂无该标签的日志</p>
+        </div>
+      )
+    }
+  </div>
+</BaseLayout>
