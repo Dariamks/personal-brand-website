@@ -1,0 +1,144 @@
+---
+title: "用 Spec 驱动开发做了一个个人网站：从需求到 20 条 Property-Based 测试"
+date: "2026-05-01"
+category: "工程实践"
+tags: ["Astro", "Spec-Driven", "Property-Based Testing", "TypeScript"]
+summary: '我用 Requirements → Design → Tasks 的 Spec 驱动方式做了这个网站。本文记录了我从 22 条 EARS 需求开始，如何推导出 20 条 Property-Based 测试，把"网站不能出 bug"这件事变成可机器验证的工程契约。'
+draft: false
+---
+
+## 为什么不是直接开干？
+
+做一个个人网站，最直觉的方式是开个 Astro 模板，往里塞内容，部署。**两小时就能上线**。
+
+但我刻意没这么做，因为我想拿这个项目把一个工作里一直在用的方法论做完整：**Spec 驱动开发（Spec-Driven Development）**。
+
+本职工作里我做工业物联网平台，需求经常是模糊的——"告警要快""大屏要稳"——开发到中后期才发现"快"和"稳"对客户和我们的定义根本不一样。我想看看：如果一开始就把每条需求写成**机器可验证的契约**，是不是能把这种返工成本压到最低？
+
+个人网站正合适做这个实验：复杂度可控、不会被业务推着走、能完整跑一遍三个阶段。
+
+## 三个阶段，三个文件
+
+整个项目我只产出了三个文档（在 `.kiro/specs/` 下）：
+
+```
+requirements.md  ─── 22 条用户故事 + 全部用 EARS 格式写
+design.md        ─── 技术选型 + 数据模型 + 20 条正确性属性
+tasks.md         ─── 13 个 Phase / 100+ 任务，每个都标 Validates: Requirement X.Y
+```
+
+**这三个文档的总字数比我后来写的代码还多**——但这正是关键：在写第一行代码之前，所有"边界情况"都被想过一遍。
+
+### Requirements：用 EARS 把需求变成契约
+
+EARS（Easy Approach to Requirements Syntax）是航天软件领域的需求语法。它强制你用五种模式之一书写：
+
+```
+1. Ubiquitous:   THE <实体> SHALL <行为>
+2. Event-driven: WHEN <触发> THE <实体> SHALL <行为>
+3. State-driven: WHILE <状态> THE <实体> SHALL <行为>
+4. Optional:     WHERE <可选特性> THE <实体> SHALL <行为>
+5. Unwanted:     IF <异常> THEN THE <实体> SHALL <行为>
+```
+
+举个具体例子。"博客列表按时间倒序"这种需求，平时大家会写：
+
+> 博客列表应该按时间倒序展示。
+
+EARS 强制你写成：
+
+> THE Blog_List_Page SHALL 按发布日期倒序（最新在前）展示所有 `draft` 字段值不为 `true` 的博客文章，每项包含文章标题、格式为 YYYY-MM-DD 的发布日期、所属分类、标签列表与不超过 150 个字符的摘要。
+
+第二种写法的好处是：**它直接告诉你怎么测**——遍历列表，检查日期单调不增，检查 draft 不出现，检查每项字段。
+
+### Design：把需求降维到 Property
+
+Property-Based Testing 的核心是把"我希望系统怎样"表达成 `for all X, P(X)` 的全局不变量。比如刚才那条需求，可以归约成一条 Property：
+
+> **Property 1（列表渲染不变量）**：对任意 collection C 与截断上限 K，所渲染的条目序列等于 `take(K, sortDesc(filter(e => !e.draft, C)))`。
+
+这一条 Property 同时覆盖了：
+
+- Home 近期文章（K=5）、近期项目（K=3）、近期日志（K=3）
+- Blog 列表页（K=∞）、Project 列表页（K=∞）、Journal 列表页（K=∞）
+- Blog RSS（K=20）、Journal RSS（K=20）
+
+**8 个具体场景，1 条 Property 就锁住了**。
+
+我最后从 22 条 Requirement 里反推出 20 条 Property（在 `design.md` 里完整列出）。挑几个有意思的：
+
+- **P3（Draft 全局排除）**：任意 `draft: true` 的内容文件不会出现在产物的任何位置——列表、RSS、sitemap、搜索索引都不能泄漏
+- **P4（Nav/Footer 一致性）**：全站所有 HTML 页面的 `<nav>` 和 `<footer>` 子树（剔除 `aria-current` 后）规范化序列化结果**完全相等**
+- **P5（外链 target/rel）**：任意 origin 不同于站点的 `<a>` 必有 `target="_blank"` 且 `rel` 含 `noopener`
+- **P8（死链闭合）**：任意内部链接的 href 必在产物路由集合中存在
+- **P18（动效时长）**：所有 CSS 中 `transition-duration` / `animation-duration` 的毫秒值 ≤ 300
+
+这些 Property 的好处不是"更优雅"——而是**它们是可执行的**。我用 `vitest` + `fast-check` 把它们落成测试代码，build 完直接跑，挂了就阻止部署。
+
+### Tasks：让 LLM 可以接力
+
+`tasks.md` 把每个 Phase 拆成 5-10 个具体任务。每个任务格式：
+
+```
+- [ ] X.Y 简短标题
+  - 详细描述
+  - Validates: Requirement X.Y, X.Z
+  - Properties: P<N>
+  - Depends: X.Y
+```
+
+这个格式的好处是：**Spec → 实现 → 测试是闭环可追溯的**。任意一条 Property 失败，能反查到 task → requirement，知道"是哪条用户故事被违反了"。
+
+文末附了一张追溯矩阵（22 × 100+），完整画出 Requirement × Task × Property 的依赖关系。
+
+## 实战中真的省了功夫吗？
+
+我做完后回头看，**至少在这三件事上回报很大**：
+
+### 1. 在写代码之前发现了三个隐藏的边界
+
+写 Requirement 7（Now 页）时，我意识到 Now 页"超过 90 天显示已过时"的需求，必须有四个补充规则：
+
+- 文件不存在 → 构建失败（不能让这个页面默默缺失）
+- 日期格式错误 → 构建失败
+- 日期晚于当前日期 → 构建失败（防止笔误）
+- 缺字段 → 构建失败
+
+这四条都是写需求时**反向逼问出来的**。如果直接写代码，至少有两条会漏。
+
+### 2. Property 抓到的真实 bug
+
+CI 跑通后，我故意在 site.yml 里把 GitHub 链接置空，**P7（条件字段 ⇔ UI 元素）测试立刻挂了**——它发现 Footer 还在渲染 GitHub 图标但 href 为空。如果没有这条 Property，这个 bug 会一直在线上挂着。
+
+类似的还有：P5 抓到一个内嵌组件的外链忘了加 `rel="noopener"`，P11 抓到 sitemap 漏了 `/journal/tag/*` 子路由。**没有 Property，这些都是"线上跑了好几个月才被人提 issue"的级别**。
+
+### 3. AI 协作变得可控
+
+我用 Claude Code 做大部分实现工作。**Spec 文档是它最好的"对齐工具"**——每次我说"实现 Phase 6 的 Blog List 页"，它都会先去读 `requirements.md` 的 Requirement 5 和 `design.md` 的对应章节，再去看 Property 定义，然后落代码。
+
+最后再跑测试验收。Property 失败 = 实现偏离 Spec，Property 全过 = 真的实现了我想要的。**没有 Spec 的 LLM 协作就是赌运气**。
+
+## 哪些场景适合 Spec 驱动？
+
+我自己的判断：
+
+✅ **适合**：
+
+- 有明确边界与外部契约的系统（API、SDK、CLI、内容平台）
+- 需要长期维护、要应对未来重构的项目
+- 多人协作、需要统一对齐
+- 用 LLM 做大部分实现工作
+
+❌ **不适合**：
+
+- 探索性原型、PoC（业务都没确定，写需求是浪费）
+- UI/UX 主导的产品（视觉判断难形式化）
+- 一次性脚本
+
+## 写在最后
+
+Spec 驱动开发不是银弹，但它确实把一些隐性的工程判断**显性化**了——你被强制思考"什么是不变量"、"什么是边界条件"、"如何机器验证"。这种思维训练对工业物联网这种长寿命系统的设计很有用。
+
+如果你也想试试，建议从一个**小项目**开始（比如这种个人网站），把流程跑完一遍，体会"Property 设计"这个步骤的价值。它跟单元测试不是一回事——单元测试问"这个函数对吗"，Property 问"整个系统的哪条规则不能被违反"。
+
+后者通常比前者更难写，但**漏抓 bug 的概率也低一个数量级**。

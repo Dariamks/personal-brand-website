@@ -1,0 +1,150 @@
+---
+title: "告警历史查询从 2s+ 降到 200ms：一次完整的索引、SQL 与分表实战"
+date: "2026-04-15"
+category: "MySQL 优化"
+tags: ["MySQL", "索引", "SQL 调优", "分表"]
+summary: "工业物联网平台的告警历史表暴增到亿级后，按区域 + 时间窗的条件查询从 2s 飙到 5s+。本文记录我用 EXPLAIN 定位、组合索引重建、SQL 重写与按月分表四步把 P95 拉回 200ms 的完整过程。"
+draft: false
+---
+
+## 问题现场
+
+智慧矿山平台运行 6 个月后，告警历史表 `alarm_record` 已经 **8000W+ 行**。指挥中心大屏的"区域 + 时间窗 + 告警等级"组合查询，从最初的 200ms 慢慢退化到 **2s+**，节假日峰值能拖到 **5s**。一线运维直接反馈"大屏在卡"。
+
+直接的诱因好定位——数据量长大，但具体怎么调，需要 EXPLAIN 一步步看。本文就把整个排查过程完整复盘一遍。
+
+## 第一步：EXPLAIN 定位瓶颈
+
+慢查询日志里典型的一条 SQL：
+
+```sql
+SELECT id, alarm_time, area_id, level, message
+FROM alarm_record
+WHERE area_id IN (1, 2, 5, 8)
+  AND alarm_time >= '2026-04-01'
+  AND alarm_time < '2026-05-01'
+  AND level >= 2
+ORDER BY alarm_time DESC
+LIMIT 100;
+```
+
+EXPLAIN 输出（精简）：
+
+```
+type: range
+key: idx_alarm_time
+rows: 12_400_000
+Extra: Using where; Using filesort
+```
+
+读到这里基本能下结论：
+
+1. `type: range` 看似还行，但 `rows` **1240 万**说明 InnoDB 实际扫了一千多万行才回表过滤
+2. `idx_alarm_time` 单列索引帮 MySQL 缩到了"4 月份的所有告警"——但 4 月份本身就有 1240 万条
+3. **`Using filesort`** 是性能杀手——MySQL 拿到结果后还要在内存/磁盘里再排一次序
+
+## 第二步：组合索引重建
+
+把单列 `idx_alarm_time` 换成组合索引，把过滤性最强的列放前面：
+
+```sql
+-- 旧索引
+DROP INDEX idx_alarm_time ON alarm_record;
+
+-- 新索引：先按区域过滤（IN 命中 4 个区域已经把数据切成 1/30），
+-- 再按时间排序（避免 filesort），最后才是等级
+CREATE INDEX idx_area_time_level
+  ON alarm_record (area_id, alarm_time DESC, level);
+```
+
+**为什么这个顺序？**——索引的最左前缀原则 + 排序消除原则：
+
+- `area_id` IN 4 个值，在 30 个区域里只占 1/7.5，过滤性最强放最前
+- `alarm_time DESC` 跟 `ORDER BY` 的排序方向一致，可以**直接用索引顺序读**，跳过 filesort
+- `level` 等值过滤，放最后做覆盖
+
+重新 EXPLAIN：
+
+```
+type: range
+key: idx_area_time_level
+rows: 412_000
+Extra: Using where; Backward index scan
+```
+
+`rows` 从 1240 万降到 41 万，**Using filesort 消失了**。SQL 实测耗时从 2.3s 降到 **480ms**。
+
+## 第三步：SQL 重写——`IN` 改成 `UNION ALL`
+
+注意 EXPLAIN 里仍然是 `range`。`IN (1, 2, 5, 8)` 在 InnoDB 里会被优化器拆成 4 个 range 子任务，但这 4 个子任务**不能并行**，且每个子任务都要从索引根节点开始走。
+
+把它显式拆成 4 个等值查询再 UNION：
+
+```sql
+(SELECT id, alarm_time, area_id, level, message
+   FROM alarm_record
+   WHERE area_id = 1
+     AND alarm_time >= '2026-04-01' AND alarm_time < '2026-05-01'
+     AND level >= 2
+   ORDER BY alarm_time DESC LIMIT 100)
+UNION ALL
+(SELECT ... area_id = 2 ...)
+UNION ALL
+(SELECT ... area_id = 5 ...)
+UNION ALL
+(SELECT ... area_id = 8 ...)
+ORDER BY alarm_time DESC
+LIMIT 100;
+```
+
+EXPLAIN 现在 4 个子查询都是 `type: ref`（等值，最快档），整体耗时降到 **~290ms**。
+
+> 这一步的细微之处是：每个子查询自己也得 `LIMIT 100`，否则可能拉回 4 × 41 万行后再排序，反而更慢。
+
+## 第四步：按月分表，让"扫描范围"再瘦一圈
+
+8000W+ 单表的查询无论怎么调，索引树的高度本身就上去了。我们决定按月分表：
+
+```
+alarm_record_202604
+alarm_record_202605
+alarm_record_202606
+...
+```
+
+写入端在 `alarm_time` 入参时算出年月路由到对应分表；查询端按时间范围**只查命中月份的表**。
+
+实现细节几个点：
+
+1. **物理分表 vs 分区表**——选物理分表是因为 MyBatis-Plus 接它更顺，且历史表可以独立归档/压缩
+2. **跨月查询**——`2026-04-25` 到 `2026-05-05` 这种横跨两月的查询，用 `UNION ALL` 在两个分表上合并
+3. **历史归档**——3 个月以上的分表迁到归档库，主库只保留近 3 月
+4. **路由层**——在 MyBatis-Plus 的 `Interceptor` 里实现 SQL 重写，业务代码完全无感
+
+落地后单分表 ~600W 行，**P95 查询耗时 200ms 以内**。
+
+## 第五步：兜底——Redis 缓存大屏热点指标
+
+大屏首屏的"全厂告警分布"这种聚合指标，**60 秒内的查询完全可以用缓存**。我们把这类聚合接口的结果用 Redis Hash 缓存 60 秒：
+
+```java
+@Cacheable(value = "alarm:dashboard", key = "#regionId", unless = "#result == null")
+public AlarmDashboardVO getDashboard(Long regionId) {
+    // 复杂的多表聚合 SQL
+}
+```
+
+加完缓存后，**数据库 QPS 整体下降约 40%**，大屏首屏从 **600ms → 80ms**。
+
+## 复盘：四步法的通用价值
+
+我后来把这套排查思路做成了团队的 SQL 调优 checklist：
+
+1. **EXPLAIN 定位**——先看 `type` / `rows` / `Extra`，三项告诉你瓶颈在扫描量、索引选择还是排序
+2. **组合索引**——按"等值 → 范围 → 排序 → 覆盖"的顺序排列字段，过滤性最强的放最前
+3. **SQL 重写**——`IN` 拆 `UNION ALL`，子查询提前 `LIMIT`，避免回表的 `SELECT *`
+4. **物理分表/缓存**——单表数据量到达千万级（特别是有时间维度），考虑按时间分表 + 热点指标 Redis 缓存
+
+**最关键的认知**：性能优化不是"加缓存就完事"，而是先把 SQL 本身能调到的极限调好，缓存只是兜底。在我这个场景里，索引 + SQL 重写已经把 P95 从 2s+ 降到 290ms，分表是为了"未来 5 年也能撑住"，Redis 缓存是大屏体验的最后 100ms。
+
+后续我会写另一篇专门讲**分表中间件 vs 物理分表 vs 分区表**的对比，以及我们最终选物理分表的几个考量。

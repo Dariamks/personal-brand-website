@@ -1,6 +1,6 @@
 name: 向子豪
 tagline: Java 后端开发工程师
-intro: 1 年后端开发经验，专注于 Java 生态与工业物联网。热爱从底层原理出发理解技术，追求可读、可维护、可扩展的代码。
+intro: 1 年后端经验，主攻工业物联网与高并发数据接入。日均处理 200W+ 设备上报数据，独立设计告警分析引擎与多协议接入网关。从底层原理出发理解技术，用响应时长、QPS、命中率等量化指标驱动优化。
 heroTags:
   - Java
   - Spring Cloud
@@ -8,6 +8,7 @@ heroTags:
   - Redis
   - MySQL
 nowLinkText: 看看我现在在做什么
-url: https://example.com
+url: https://personal-brand-website-rosy.vercel.app
 email: xluk277167@gmail.com
-social: {}
+social:
+  github: https://github.com/Dariamks

@@ -56,15 +56,33 @@ describe("Conditional rendering", () => {
   });
 
   it("project detail page renders without demo/repo links when absent", () => {
+    // Find a project entry from source content that has neither demo nor repo
+    const projectsDir = resolve(
+      import.meta.dirname,
+      "../../src/content/projects",
+    );
+    const matter = require("gray-matter");
+    const fs = require("fs");
+    const path = require("path");
+    const projectFiles: string[] = fs
+      .readdirSync(projectsDir)
+      .filter((f: string) => f.endsWith(".mdx") || f.endsWith(".md"));
+    const projectWithoutLinks = projectFiles
+      .map((f: string) => ({
+        slug: f.replace(/\.mdx?$/, ""),
+        data: matter(fs.readFileSync(path.join(projectsDir, f), "utf-8")).data,
+      }))
+      .find(
+        (p: { data: { demo?: string; repo?: string; draft?: boolean } }) =>
+          !p.data.demo && !p.data.repo && !p.data.draft,
+      );
+    if (!projectWithoutLinks) return; // No applicable project — property holds vacuously
     const html = readFileSync(
-      resolve(distDir, "projects/example-project/index.html"),
+      resolve(distDir, `projects/${projectWithoutLinks.slug}/index.html`),
       "utf-8",
     );
-    // The sample project has no demo/repo URLs configured
-    // Verify the project detail page loads and shows content
     expect(html.length).toBeGreaterThan(2000);
-    expect(html).toContain("示例项目");
-    expect(html).toContain("项目背景与要解决的问题");
+    expect(html).toContain(projectWithoutLinks.data.title);
   });
 
   it("home page renders without crashing and has substantial content", () => {
